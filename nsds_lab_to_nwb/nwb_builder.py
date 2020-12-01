@@ -5,7 +5,12 @@ import uuid
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.file import Subject
 
+from nsds_lab_to_nwb.common.data_scanner import DataScanner
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
+from nsds_lab_to_nwb.components.device.device_originator import DeviceOriginator
+from nsds_lab_to_nwb.components.electrode.electrodes_originator import ElectrodesOriginator
+from nsds_lab_to_nwb.components.tdt.tdt_originator import TdtOriginator
+from nsds_lab_to_nwb.components.wav.sound_originator import SoundOriginator
 
 
 path = os.path.dirname(os.path.abspath(__file__))
@@ -35,6 +40,14 @@ class NWBBuilder:
         self.output_file = os.path.join(self.out_path,
                                 self.animal_name + '_' + self.block + '.nwb')
 
+        # create originator instances
+        # (not yet implemented)
+        self.dataset = DataScanner(self.data_path, self.animal_name, self.block).extract_dataset()
+        self.device_originator = DeviceOriginator(self.metadata)
+        self.electrodes_originator = ElectrodesOriginator(self.metadata)
+        self.tdt_originator = TdtOriginator(self.dataset, self.metadata)
+        self.sound_originator = SoundOriginator(self.dataset, self.metadata)
+
     def build(self):
         '''Build NWB file content.
         '''
@@ -55,6 +68,13 @@ class NWBBuilder:
                 species=self.metadata['subject']['species']
             ),
         )
+
+        # extract from raw data and add components to the NWB File content
+        # (not yet implemented)
+        self.device_originator.make(nwb_content)
+        self.electrodes_originator.make(nwb_content)
+        self.tdt_originator.make(nwb_content)
+        self.sound_originator.make(nwb_content)
 
         return nwb_content
 
