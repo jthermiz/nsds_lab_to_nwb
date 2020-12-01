@@ -1,0 +1,22 @@
+# to update your existing conda environment, run:
+# >> conda env update -f environment.yml
+#
+# to create a new environment from this file, run:
+# >> conda env create --name ENV_NAME --file=environment.yml
+# ----------------------------------------------------------
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.7
+  - pip
+  - numpy
+  - scipy
+  - h5py
+  - hdmf
+  - hdf5
+  - pynwb
+
+  - pip:
+    - -rrequirements.txt
+
