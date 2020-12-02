@@ -17,9 +17,11 @@ block = 'B10'
 home = os.path.expanduser("~")
 out_path = os.path.join(home, 'Data/nwb_test/')
 
-# link to metadata files
+# paths to metadata files
 metadata_path = os.path.join(path, '../yaml/R56_B10.yaml')
-nwb_metadata = MetadataManager(metadata_path=metadata_path)
+library_path = os.path.join(home, 'Src/NSDSLab-NWB-metadata/yaml/')
+nwb_metadata = MetadataManager(metadata_path=metadata_path,
+                               library_path=library_path)
 
 
 # --- build NWB file for the specified block ---
