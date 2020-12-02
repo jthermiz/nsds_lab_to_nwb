@@ -4,5 +4,5 @@ class DataScanner():
         self.animal_name = animal_name
         self.block = block
 
-    def extract(self):
+    def extract_dataset(self):
         pass
