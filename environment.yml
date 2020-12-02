@@ -16,6 +16,7 @@ dependencies:
   - hdmf
   - hdf5
   - pynwb
+  - pyyaml
 
   - pip:
     - -rrequirements.txt
