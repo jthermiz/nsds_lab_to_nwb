@@ -60,14 +60,14 @@ class NWBBuilder:
         '''
         logger.info('Building components for NWB')
         nwb_content = NWBFile(
-            session_description=self.metadata['session description'],
-            experimenter=self.metadata['experimenter name'],
+            session_description=self.metadata['session_description'],
+            experimenter=self.metadata['experimenter'],
             lab=self.metadata['lab'],
             institution=self.metadata['institution'],
             session_start_time = self.session_start_time,
             identifier=str(uuid.uuid1()),
             session_id=self.metadata['session_id'],
-            experiment_description=self.metadata['experiment description'],
+            experiment_description=self.metadata['experiment_description'],
             subject=Subject(
                 subject_id=self.metadata['subject']['subject id'],
                 description=self.metadata['subject']['description'],
