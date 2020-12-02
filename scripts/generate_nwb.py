@@ -3,6 +3,8 @@ import os
 from nsds_lab_to_nwb.nwb_builder import NWBBuilder
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
 
+path = os.path.dirname(os.path.abspath(__file__))
+
 
 # --- user input and metadata for an experiment block ---
 
@@ -16,7 +18,7 @@ home = os.path.expanduser("~")
 out_path = os.path.join(home, 'Data/nwb_test/')
 
 # link to metadata files
-metadata_path = 'path/to/metadata.yaml' # **TODO**
+metadata_path = os.join.path(path, '../yaml/R56_B10.yaml')
 nwb_metadata = MetadataManager(metadata_path=metadata_path)
 
 

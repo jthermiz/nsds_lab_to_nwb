@@ -1,5 +1,6 @@
 import os
 import io
+import json
 import yaml
 
 class MetadataManager:
@@ -7,14 +8,12 @@ class MetadataManager:
     '''
 
     def __init__(self, metadata_path: str):
-        self.__validate(metadata_path)
         self.metadata_path = metadata_path
-        self.metadata = self.__get_metadata(metadata_path)
+        self.metadata = self.extract_metadata(metadata_path)
 
-    def __validate():
-        # check if the files exist
-        pass
-
-    def __get_metadata():
-        # extract metadata from file
-        pass
+    @staticmethod
+    def extract_metadata(metadata_path):
+        with open(metadata_path, 'r') as stream:
+            metadata_dict = yaml.safe_load(stream)
+            metadata = json.loads(json.dumps(metadata_dict), parse_int=str, parse_float=str)
+            return metadata
