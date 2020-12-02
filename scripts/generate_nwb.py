@@ -18,7 +18,7 @@ home = os.path.expanduser("~")
 out_path = os.path.join(home, 'Data/nwb_test/')
 
 # link to metadata files
-metadata_path = os.join.path(path, '../yaml/R56_B10.yaml')
+metadata_path = os.path.join(path, '../yaml/R56_B10.yaml')
 nwb_metadata = MetadataManager(metadata_path=metadata_path)
 
 
