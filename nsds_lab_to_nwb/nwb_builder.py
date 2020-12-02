@@ -1,6 +1,8 @@
 import logging.config
 import os
 import uuid
+from datetime import datetime
+import pytz
 
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.file import Subject
@@ -19,6 +21,9 @@ logging.config.fileConfig(fname=str(path) + '/logging.conf', disable_existing_lo
 logger = logging.getLogger(__name__)
 
 
+_DEFAULT_SESSION_START_TIME = datetime.fromtimestamp(0, pytz.utc) # dummy value for now
+
+
 class NWBBuilder:
     '''Unpack data from a specified block, and write those data into NWB file format.
     '''
@@ -29,13 +34,15 @@ class NWBBuilder:
             animal_name: str,
             block: str,
             nwb_metadata: MetadataManager,
-            out_path: str = ''
+            out_path: str = '',
+            session_start_time = _DEFAULT_SESSION_START_TIME
     ):
         self.data_path = data_path
         self.animal_name = animal_name
         self.block = block
         self.metadata = nwb_metadata.metadata
         self.out_path = out_path
+        self.session_start_time = session_start_time
         
         self.output_file = os.path.join(self.out_path,
                                 self.animal_name + '_' + self.block + '.nwb')
@@ -57,6 +64,7 @@ class NWBBuilder:
             experimenter=self.metadata['experimenter name'],
             lab=self.metadata['lab'],
             institution=self.metadata['institution'],
+            session_start_time = self.session_start_time,
             identifier=str(uuid.uuid1()),
             session_id=self.metadata['session_id'],
             experiment_description=self.metadata['experiment description'],
