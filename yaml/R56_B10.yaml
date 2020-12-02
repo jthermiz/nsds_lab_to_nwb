@@ -1,92 +1,14 @@
-# sample metadata (under development)
-
-
-# === basic information ===
-
-experimenter name: Max Dougherty
-lab: Bouchard Lab
-institution: Lawrence Berkeley National Laboratory
-experiment description: Auditory Stimulus Experiment
-session description: Tone Block
-session_id: R56_B10
-subject:
-  subject id: "R56"
-  species: Rat
-  description: Unknown
-  genotype: Unknown
-  sex: Unknown
-  weight: Unknown
-
-
-# === environment ===
-
-data acq device:
-  - system: Unknown
-    amplifier: Unknown
-
-device:
-  name:
-    - TDT
-
-
-# === auditory stimuli ===
-
-# pass stimulus information
-
-
-# === electrodes ===
-
-electrode groups:
-  - id: 0
-    location: Unknown
-    device_type: ECoG
-    description: ECoG 0
-    targeted_location: Unknown
-    targeted_x: 0.0
-    targeted_y: 0.0
-    targeted_z: 0.0
-    units: um
-  - id: 1
-    location: Unknown
-    device_type: Poly
-    description: Poly 0
-    targeted_location: Unknown
-    targeted_x: 0.0
-    targeted_y: 0.0
-    targeted_z: 0.0
-    units: um
-  
-
-electrode group channel map:
-  - ntrode_id: 1
-    electrode_group_id: 0
-    bad_channels: []
-    map:
-      0: 0
-      1: 1
-      2: 2
-      3: 3
-  - ntrode_id: 2
-    electrode_group_id: 0
-    bad_channels: []
-    map:
-      0: 0
-      1: 1
-      2: 2
-      3: 3
-  - ntrode_id: 3
-    electrode_group_id: 1
-    bad_channels: []
-    map:
-      0: 0
-      1: 1
-      2: 2
-      3: 3
-  - ntrode_id: 4
-    electrode_group_id: 1
-    bad_channels: []
-    map:
-      0: 0
-      1: 1
-      2: 2
-      3: 3
+name: R56_B10
+experiment: nse_aud
+device: E128_P64
+stimulus: tone
+poly_neighbors:
+  - 80
+  - 101
+  - 96
+  - 99
+bad_chs:
+  Poly:
+    - 12
+    - 58
+  ECoG: []
