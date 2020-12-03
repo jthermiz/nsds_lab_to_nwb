@@ -1,0 +1,14 @@
+name: R56_B13
+experiment: nse_aud
+device: E128_P64
+stimulus: wn2
+poly_neighbors:
+  - 80
+  - 101
+  - 96
+  - 99
+bad_chs:
+  Poly:
+    - 12
+    - 58
+  ECoG: []

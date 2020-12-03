@@ -1,5 +1,6 @@
 import logging.config
 import os
+from os.path import join, exists
 import uuid
 from datetime import datetime
 import pytz
@@ -9,10 +10,13 @@ from pynwb.file import Subject
 
 from nsds_lab_to_nwb.common.data_scanner import DataScanner
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
+
 from nsds_lab_to_nwb.components.device.device_originator import DeviceOriginator
+from nsds_lab_to_nwb.components.electrode.electrode_groups_originator import ElectrodeGroupsOriginator
 from nsds_lab_to_nwb.components.electrode.electrodes_originator import ElectrodesOriginator
+from nsds_lab_to_nwb.components.htk.htk_originator import HtkOriginator
+from nsds_lab_to_nwb.components.stimulus.stimulus_originator import StimulusOriginator
 from nsds_lab_to_nwb.components.tdt.tdt_originator import TdtOriginator
-from nsds_lab_to_nwb.components.wav.sound_originator import SoundOriginator
 
 
 path = os.path.dirname(os.path.abspath(__file__))
@@ -21,6 +25,7 @@ logging.config.fileConfig(fname=str(path) + '/logging.conf', disable_existing_lo
 logger = logging.getLogger(__name__)
 
 
+#TODO: GET ACCURATE START TIME
 _DEFAULT_SESSION_START_TIME = datetime.fromtimestamp(0, pytz.utc) # dummy value for now
 
 
@@ -34,6 +39,7 @@ class NWBBuilder:
             animal_name: str,
             block: str,
             nwb_metadata: MetadataManager,
+            stim_path = None,
             out_path: str = '',
             session_start_time = _DEFAULT_SESSION_START_TIME
     ):
@@ -43,30 +49,46 @@ class NWBBuilder:
         self.metadata = nwb_metadata.metadata
         self.out_path = out_path
         self.session_start_time = session_start_time
-        
-        self.output_file = os.path.join(self.out_path,
+
+        # determine input subdirectories (should confirm!)
+        self.stim_path = os.path.join(data_path, 'Stimulus/')
+        self.htk_path = os.path.join(data_path, 'RatArchive/')
+
+        rat_out_dir = os.path.join(self.out_path, self.animal_name)
+        os.makedirs(rat_out_dir, exist_ok=True) # Ensure that the rat directory exists
+        self.output_file = os.path.join(rat_out_dir,
                                 self.animal_name + '_' + self.block + '.nwb')
 
         # create originator instances
         # (not yet implemented)
-        self.dataset = DataScanner(self.data_path, self.animal_name, self.block).extract_dataset()
         self.device_originator = DeviceOriginator(self.metadata)
+        self.electrode_groups_originator = ElectrodeGroupsOriginator(self.metadata)
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
-        self.tdt_originator = TdtOriginator(self.dataset, self.metadata)
-        self.sound_originator = SoundOriginator(self.dataset, self.metadata)
 
-    def build(self):
+        data_scanner = DataScanner(self.animal_name, self.block,
+                                data_path=self.data_path, 
+                                stim_path=self.stim_path,
+                                htk_path=self.htk_path,
+                                )
+        self.dataset = data_scanner.extract_dataset()
+        self.htk_originator = HtkOriginator(self.dataset, self.metadata)
+        self.tdt_originator = TdtOriginator(self.dataset, self.metadata)
+        self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
+
+    def build(self, extract_htk=True):
         '''Build NWB file content.
         '''
         logger.info('Building components for NWB')
+        block_name = self.metadata['block_name']
         nwb_content = NWBFile(
-            session_description=self.metadata['session_description'],
+            session_description=self.metadata['session_description'], # 'foo',
             experimenter=self.metadata['experimenter'],
             lab=self.metadata['lab'],
             institution=self.metadata['institution'],
             session_start_time = self.session_start_time,
-            identifier=str(uuid.uuid1()),
-            session_id=self.metadata['session_id'],
+            file_create_date=datetime.now(),
+            identifier=str(uuid.uuid1()), # block_name,
+            session_id=block_name,
             experiment_description=self.metadata['experiment_description'],
             subject=Subject(
                 subject_id=self.metadata['subject']['subject id'],
@@ -75,14 +97,18 @@ class NWBBuilder:
                 sex=self.metadata['subject']['sex'],
                 species=self.metadata['subject']['species']
             ),
+            notes=self.metadata.get('notes', None),
+            pharmacology=self.metadata.get('pharmacology', None),
+            surgery=self.metadata.get('surgery', None),
         )
 
-        # extract from raw data and add components to the NWB File content
-        # (not yet implemented)
         self.device_originator.make(nwb_content)
-        self.electrodes_originator.make(nwb_content)
-        self.tdt_originator.make(nwb_content)
-        self.sound_originator.make(nwb_content)
+        self.electrode_groups_originator.make(nwb_content)
+        electrode_table_regions = self.electrodes_originator.make(nwb_content)
+        if extract_htk:
+            self.htk_originator.make(nwb_content, electrode_table_regions)
+        # self.tdt_originator.make(nwb_content)
+        self.stimulus_originator.make(nwb_content)
 
         return nwb_content
 

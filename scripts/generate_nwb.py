@@ -8,17 +8,19 @@ path = os.path.dirname(os.path.abspath(__file__))
 
 # --- user input and metadata for an experiment block ---
 
-# raw data path
-data_path = '/clusterfs/NSDS_data/hackathon20201201/'
 animal_name = 'R56'
 block = 'B10'
+# block = 'B13'
+
+# raw data path
+data_path = '/clusterfs/NSDS_data/hackathon20201201/'
 
 # output path
 home = os.path.expanduser("~")
 out_path = os.path.join(home, 'Data/nwb_test/')
 
-# paths to metadata files
-metadata_path = os.path.join(path, '../yaml/R56_B10.yaml')
+# link to metadata files
+metadata_path = os.path.join(path, '../yaml/{}_{}.yaml'.format(animal_name, block))
 library_path = os.path.join(home, 'Src/NSDSLab-NWB-metadata/yaml/')
 nwb_metadata = MetadataManager(metadata_path=metadata_path,
                                library_path=library_path)

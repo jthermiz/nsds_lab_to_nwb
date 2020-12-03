@@ -17,6 +17,7 @@ dependencies:
   - hdf5
   - pynwb
   - pyyaml
+  - imageio
 
   - pip:
     - -rrequirements.txt
