@@ -11,7 +11,6 @@ class HtkOriginator():
         for device_name, dev_conf in self.metadata['device'].items():
             if isinstance(dev_conf, str): # skip other annotations
                 continue
-            e_series = self.htk_manager.extract_raw_htk(device_name,
-                                                        dev_conf,
-                                                        electrode_table_regions)
+            e_series = self.htk_manager.extract_raw_htk(device_name, dev_conf,
+                                                        electrode_table_regions[device_name])
             nwb_content.add_acquisition(e_series)

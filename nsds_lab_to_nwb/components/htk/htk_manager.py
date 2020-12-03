@@ -7,7 +7,7 @@ class HtkManager():
     def __init__(self, raw_path):
         self.raw_path = raw_path
 
-    def extract_raw_htk(self, device_name, dev_conf, electrode_table_regions):
+    def extract_raw_htk(self, device_name, dev_conf, electrode_table_region):
         ''' adapted from mars.HTKNWB.add_raw_htk
         now manages one device at a time
         '''
@@ -25,7 +25,7 @@ class HtkManager():
         # Create the electrical series
         e_series = ElectricalSeries(name=device_name, #name
                                     data=device_reader.data, #data
-                                    electrodes=electrode_table_regions[device_name], #electrode table region
+                                    electrodes=electrode_table_region, #electrode table region
                                     starting_time=0.0,
                                     rate=dev_conf['sampling_rate'])
         return e_series
