@@ -21,7 +21,7 @@ out_path = os.path.join(home, 'Data/nwb_test/')
 
 # link to metadata files
 metadata_path = os.path.join(path, '../yaml/{}_{}.yaml'.format(animal_name, block))
-library_path = os.path.join(home, 'Src/NSDSLab-NWB-metadata/yaml/')
+library_path = os.path.join(home, 'Src/NSDSLab-NWB-metadata/')
 nwb_metadata = MetadataManager(metadata_path=metadata_path,
                                library_path=library_path)
 
