@@ -39,7 +39,6 @@ class NWBBuilder:
             animal_name: str,
             block: str,
             nwb_metadata: MetadataManager,
-            stim_path = None,
             out_path: str = '',
             session_start_time = _DEFAULT_SESSION_START_TIME
     ):
@@ -50,30 +49,32 @@ class NWBBuilder:
         self.out_path = out_path
         self.session_start_time = session_start_time
 
-        # determine input subdirectories (should confirm!)
-        self.stim_path = os.path.join(data_path, 'Stimulus/')
-        self.htk_path = os.path.join(data_path, 'RatArchive/')
+        # determine input subdirectories (for now specific to example dataset)
+        stim_path = os.path.join(data_path, 'Stimulus/')
+        htk_path = os.path.join(data_path, 'RatArchive/')
+        tdt_path = os.path.join(data_path, 'TTankBackup/')
+        data_scanner = DataScanner(self.animal_name, self.block,
+                                data_path=self.data_path, 
+                                stim_path=stim_path,
+                                htk_path=htk_path,
+                                tdt_path=tdt_path,
+                                )
+        self.dataset = data_scanner.extract_dataset()
 
+        # prepare output path
         rat_out_dir = os.path.join(self.out_path, self.animal_name)
-        os.makedirs(rat_out_dir, exist_ok=True) # Ensure that the rat directory exists
+        os.makedirs(rat_out_dir, exist_ok=True)
         self.output_file = os.path.join(rat_out_dir,
                                 self.animal_name + '_' + self.block + '.nwb')
 
         # create originator instances
-        # (not yet implemented)
         self.device_originator = DeviceOriginator(self.metadata)
         self.electrode_groups_originator = ElectrodeGroupsOriginator(self.metadata)
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
-
-        data_scanner = DataScanner(self.animal_name, self.block,
-                                data_path=self.data_path, 
-                                stim_path=self.stim_path,
-                                htk_path=self.htk_path,
-                                )
-        self.dataset = data_scanner.extract_dataset()
         self.htk_originator = HtkOriginator(self.dataset, self.metadata)
         self.tdt_originator = TdtOriginator(self.dataset, self.metadata)
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
+
 
     def build(self, extract_htk=True):
         '''Build NWB file content.
@@ -107,10 +108,11 @@ class NWBBuilder:
         electrode_table_regions = self.electrodes_originator.make(nwb_content)
         if extract_htk:
             self.htk_originator.make(nwb_content, electrode_table_regions)
-        # self.tdt_originator.make(nwb_content)
+        # self.tdt_originator.make(nwb_content, electrode_table_regions)
         self.stimulus_originator.make(nwb_content)
 
         return nwb_content
+
 
     def write(self, content):
         '''Write collected NWB content into an actual file.
