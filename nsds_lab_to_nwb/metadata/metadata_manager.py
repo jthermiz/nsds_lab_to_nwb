@@ -54,9 +54,8 @@ class MetadataManager:
         ref_data = self.read_yaml(os.path.join(
                         self.yaml_lib_path, key, filename + '.yaml'))
         ref_data.pop('name')
+        metadata.update(ref_data)  # add to top level
         self.__check_subject(metadata)
-        # add to top level
-        metadata.update(ref_data)
 
     def expand_device(self, metadata, filename, key='device'):
         ref_data = self.read_yaml(os.path.join(
