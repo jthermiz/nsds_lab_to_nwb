@@ -20,5 +20,6 @@ dependencies:
   - imageio
 
   - pip:
+    - tdt
     - -rrequirements.txt
 
