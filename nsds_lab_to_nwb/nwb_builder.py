@@ -76,8 +76,17 @@ class NWBBuilder:
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
 
 
-    def build(self, extract_htk=False):
+    def build(self, use_htk=False):
         '''Build NWB file content.
+        
+        Parameters
+        ----------
+        use_htk: applicable for auditory datasets only.
+                if False, use HTK files. if True, use TDT files directly.
+        
+        Returns:
+        --------
+        nwb_content: an NWBFile object.
         '''
         logger.info('Building components for NWB')
         block_name = self.metadata['block_name']
@@ -106,9 +115,11 @@ class NWBBuilder:
         self.device_originator.make(nwb_content)
         self.electrode_groups_originator.make(nwb_content)
         electrode_table_regions = self.electrodes_originator.make(nwb_content)
-        if extract_htk:
+        if use_htk:
+            # legacy pipeline
             self.htk_originator.make(nwb_content, electrode_table_regions)
-        self.tdt_originator.make(nwb_content, electrode_table_regions)
+        else:
+            self.tdt_originator.make(nwb_content, electrode_table_regions)
         self.stimulus_originator.make(nwb_content)
 
         return nwb_content

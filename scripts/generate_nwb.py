@@ -39,6 +39,7 @@ nwb_builder = NWBBuilder(
 
 # build the NWB file content
 nwb_content = nwb_builder.build()
+# nwb_content = nwb_builder.build(use_htk=True) # for testing non-TDT features
 
 # write to file
 nwb_builder.write(nwb_content)
