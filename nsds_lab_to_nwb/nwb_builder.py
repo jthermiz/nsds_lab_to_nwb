@@ -54,7 +54,7 @@ class NWBBuilder:
         htk_path = os.path.join(data_path, 'RatArchive/')
         tdt_path = os.path.join(data_path, 'TTankBackup/')
         data_scanner = DataScanner(self.animal_name, self.block,
-                                data_path=self.data_path, 
+                                data_path=self.data_path,
                                 stim_path=stim_path,
                                 htk_path=htk_path,
                                 tdt_path=tdt_path,
@@ -76,7 +76,7 @@ class NWBBuilder:
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
 
 
-    def build(self, extract_htk=True):
+    def build(self, extract_htk=False):
         '''Build NWB file content.
         '''
         logger.info('Building components for NWB')
@@ -108,7 +108,7 @@ class NWBBuilder:
         electrode_table_regions = self.electrodes_originator.make(nwb_content)
         if extract_htk:
             self.htk_originator.make(nwb_content, electrode_table_regions)
-        # self.tdt_originator.make(nwb_content, electrode_table_regions)
+        self.tdt_originator.make(nwb_content, electrode_table_regions)
         self.stimulus_originator.make(nwb_content)
 
         return nwb_content
