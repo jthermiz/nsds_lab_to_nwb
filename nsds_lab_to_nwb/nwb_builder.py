@@ -8,7 +8,7 @@ import pytz
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.file import Subject
 
-from nsds_lab_to_nwb.common.data_scanner import DataScanner
+from nsds_lab_to_nwb.common.data_scanner import AuditoryDataScanner, BehaviorDataScanner
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
 
 from nsds_lab_to_nwb.components.device.device_originator import DeviceOriginator
@@ -48,17 +48,16 @@ class NWBBuilder:
         self.metadata = nwb_metadata.metadata
         self.out_path = out_path
         self.session_start_time = session_start_time
-
-        # determine input subdirectories (for now specific to example dataset)
-        stim_path = os.path.join(data_path, 'Stimulus/')
-        htk_path = os.path.join(data_path, 'RatArchive/')
-        tdt_path = os.path.join(data_path, 'TTankBackup/')
-        data_scanner = DataScanner(self.animal_name, self.block,
-                                data_path=self.data_path,
-                                stim_path=stim_path,
-                                htk_path=htk_path,
-                                tdt_path=tdt_path,
-                                )
+        
+        self.experiment_type = self.metadata['experiment_type'] # now required
+        
+        # scan data_path and identify relevant subdirectories
+        if self.experiment_type == 'auditory':
+            data_scanner = AuditoryDataScanner(
+                self.animal_name, self.block, data_path=self.data_path)
+        elif self.experiment_type == 'behavior':
+            data_scanner = BehaviorDataScanner(
+                self.animal_name, self.block, data_path=self.data_path)
         self.dataset = data_scanner.extract_dataset()
 
         # prepare output path
@@ -71,10 +70,15 @@ class NWBBuilder:
         self.device_originator = DeviceOriginator(self.metadata)
         self.electrode_groups_originator = ElectrodeGroupsOriginator(self.metadata)
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
-        self.htk_originator = HtkOriginator(self.dataset, self.metadata)
-        self.tdt_originator = TdtOriginator(self.dataset, self.metadata)
-        self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
-
+        if self.experiment_type == 'auditory':
+            self.htk_originator = HtkOriginator(self.dataset, self.metadata)
+            self.tdt_originator = TdtOriginator(self.dataset, self.metadata)
+            self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
+        elif self.experiment_type == 'behavior':
+            # TODO: implement originators as needed
+            pass
+        else:
+            raise ValueError('unknown experiment type')
 
     def build(self, use_htk=False):
         '''Build NWB file content.
@@ -115,15 +119,19 @@ class NWBBuilder:
         self.device_originator.make(nwb_content)
         self.electrode_groups_originator.make(nwb_content)
         electrode_table_regions = self.electrodes_originator.make(nwb_content)
-        if use_htk:
-            # legacy pipeline
-            self.htk_originator.make(nwb_content, electrode_table_regions)
-        else:
-            self.tdt_originator.make(nwb_content, electrode_table_regions)
-        self.stimulus_originator.make(nwb_content)
+        
+        if self.experiment_type == 'auditory':
+            if use_htk:
+                # legacy pipeline
+                self.htk_originator.make(nwb_content, electrode_table_regions)
+            else:
+                self.tdt_originator.make(nwb_content, electrode_table_regions)
+            self.stimulus_originator.make(nwb_content)
+        elif self.experiment_type == 'behavior':
+            # TODO: implement as needed
+            pass
 
         return nwb_content
-
 
     def write(self, content):
         '''Write collected NWB content into an actual file.
