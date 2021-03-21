@@ -50,6 +50,7 @@ class TdtManager():
         '''
         # This is inefficient because it loads all streams. I believe there's
         # No way to select streams to load. Possible future improvement
+
         for ch in range(num_channels):
             tdt_ch = ch + 1
             tdt_struct = tdt.read_block(tdt_path, 
@@ -57,6 +58,7 @@ class TdtManager():
                                         headers=header, 
                                         evtype=['streams'])
             ch_data = tdt_struct.streams[stream].data
+
             # Transpose data because that's what NWB expects
             ch_data = np.reshape(1, -1)  
             yield ch_data
@@ -88,6 +90,7 @@ class TdtManager():
         # Serial numeric timestamp for when recording start
         tdt_params['start_time'] = header.start_time[0]
         tdt_params['stop_time']  = header.stop_time[0]
+        
         # This will convert the time stamp to a datetime.
         #tdt_params['stop_time'] = dt.datetime.fromtimestamp(header.stop_time[0])
         tdt_params['sample_rate'] = header.stores[device_name].fs

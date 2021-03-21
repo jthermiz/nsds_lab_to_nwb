@@ -5,34 +5,49 @@ import yaml
 
 from nsds_lab_to_nwb.metadata.stim_value_extractor import StimValueExtractor
 
+_DEFAULT_EXPERIMENT_TYPE = 'auditory' # for legacy sessions
+
 
 class MetadataManager:
     '''Manages metadata for NWB file builder
     '''
 
     def __init__(self,
-                 metadata_path: str,
+                 block_metadata_path: str,
                  library_path: str,
                  animal_name = None
                  ):
-        self.metadata_path = metadata_path
+        self.block_metadata_path = block_metadata_path
         self.library_path = library_path
         self.animal_name = animal_name
+        
+        self.read_block_metadata_file()
+        if self.animal_name is None:
+            self.animal_name = self.block_name.split('_')[0]
 
-        self.yaml_lib_path = os.path.join(self.library_path, 'yaml/')
-        self.stim_lib_path = os.path.join(self.library_path,
-                                'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
+        # paths to metadata/stimulus library
+        self.yaml_lib_path = os.path.join(self.library_path, self.experiment_type, 'yaml/')
+        if self.experiment_type == 'auditory':
+            self.stim_lib_path = os.path.join(self.library_path, self.experiment_type,
+                    'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
+
         self.metadata = self.extract_metadata()
 
-    def extract_metadata(self):
-        block_metadata = self.read_yaml(self.metadata_path)
-        block_name = block_metadata.pop('name')
-        if self.animal_name is None:
-            self.animal_name = block_name.split('_')[0]
+    def read_block_metadata_file(self, default_experiment_type=_DEFAULT_EXPERIMENT_TYPE):
+        # direct input from the block yaml file (not yet expanded)
+        self.block_metadata_input = self.read_yaml(self.block_metadata_path)
+        self.block_name = self.block_metadata_input.pop('name')
+        
+        # new requirement for nsdslab data: experiment_type
+        self.experiment_type = self.block_metadata_input.pop('experiment_type', default_experiment_type)
 
+    def extract_metadata(self):
         metadata = {}
-        metadata['block_name'] = block_name
-        for key, value in block_metadata.items():
+        metadata['block_name'] = self.block_name
+        metadata['experiment_type'] = self.experiment_type
+        
+        # expand metadata parts by extracting from library
+        for key, value in self.block_metadata_input.items():
             if key == 'experiment':
                 self.expand_experiment(metadata, value)
                 continue
@@ -40,12 +55,22 @@ class MetadataManager:
                 self.expand_device(metadata, value)
                 continue
             if key == 'stimulus':
+                if self.experiment_type != 'auditory':
+                    raise ValueError('experiment type mismatch')
                 self.expand_stimulus(metadata, value)
                 continue
             # else:
             metadata[key] = value
 
-        metadata['experiment_description'] = metadata['stimulus']['name'] + ' Stimulus Experiment'
+        # set experiment description
+        if self.experiment_type == 'auditory':
+            metadata['experiment_description'] = metadata['stimulus']['name'] + ' Stimulus Experiment'
+        elif self.experiment_type == 'behavior':
+            metadata['experiment_description'] = 'Reaching Experiment' # <<<< any additional specification?
+        else:
+            metadata['experiment_description'] = 'Unknown'
+            
+        # set session description, if not already existing
         if not metadata['session_description']:
             metadata['session_description'] = metadata['experiment_description']
         return metadata
