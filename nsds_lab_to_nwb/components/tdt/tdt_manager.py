@@ -36,8 +36,20 @@ class TdtManager():
         return e_series
     
     def __iter_tdt_channels(self, tdt_path, stream, header, num_channels):
-        #this is inefficient because it loads all streams. As far as I can tell,
-        #there's no way to select streams to load
+        '''
+        generator function for DataIterator, yields one channel each iteration
+
+        Args:
+        - tdt_path : (str) path for tdt directory
+        - stream : (str) data stream name such as'ECoG' or 'Poly'
+        - header : (struct) returned by tdt.read_block has recording meta-data
+        - num_channels : (int) number of channels in the data stream
+
+        Yields:
+        - ch_data : (iterator object) iterator object for one channel
+        '''
+        # This is inefficient because it loads all streams. I believe there's
+        # No way to select streams to load. Possible future improvement
         for ch in range(num_channels):
             tdt_ch = ch + 1
             tdt_struct = tdt.read_block(tdt_path, 
@@ -45,11 +57,24 @@ class TdtManager():
                                         headers=header, 
                                         evtype=['streams'])
             ch_data = tdt_struct.streams[stream].data
-            ch_data = np.reshape(1, -1) #weird quirk to make data samples x channels since it's tranposed downstream
+            # Transpose data because that's what NWB expects
+            ch_data = np.reshape(1, -1)  
             yield ch_data
         return
 
     def __extract_from_tdt_files(self, device_name, dev_conf):
+        '''
+        generator function for DataIterator, yields one channel each iteration
+
+        Args:
+        - device_name : (str) ata stream name such as'ECoG' or 'Poly'
+        - dev_conf: (dict) metadata for the device.
+                           nwb_builder.metadata['device'][device_name]       
+
+        Returns: data, tdt_parms (tuple): 
+        - data : (DataChunkIterator) tdt data as an iterator object
+        - tdt_params: (dict) tdt recording meta-data
+        '''
         tdt_path = self.tdt_path
         header = tdt.read_block(tdt_path, headers=1)
         tdt_tmp = tdt.read_block(tdt_path, channel=1)
@@ -60,8 +85,10 @@ class TdtManager():
                                   maxshape= (num_samples, num_channels), 
                                   buffer_size=BUFFER_SIZE) 
         tdt_params = {}
-        tdt_params['start_time'] = header.start_time[0] #returning numeric since that's what nwb wants for an eseries
+        # Serial numeric timestamp for when recording start
+        tdt_params['start_time'] = header.start_time[0]
         tdt_params['stop_time']  = header.stop_time[0]
+        # This will convert the time stamp to a datetime.
         #tdt_params['stop_time'] = dt.datetime.fromtimestamp(header.stop_time[0])
         tdt_params['sample_rate'] = header.stores[device_name].fs
         return data, tdt_params   
