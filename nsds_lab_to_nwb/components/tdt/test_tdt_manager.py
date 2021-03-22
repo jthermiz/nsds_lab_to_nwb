@@ -10,7 +10,7 @@ from tdt_manager import TdtManager
 from pynwb import NWBHDF5IO
 
 data_directory = '/home/jhermiz/data/hackathon20201201/TTankBackup/R56/R56_B13'    
-tdt = TdtManager(data_directory)
+tdt = TdtManager(data_directory, verbose=True)
 
 
 from datetime import datetime
@@ -40,7 +40,7 @@ for idx in [1, 2, 3, 4]:
                           group=electrode_group)
 electrode_table_region = nwbfile.create_electrode_table_region([0, 2], 'the first and third electrodes')
 
-eseries = tdt.extract_tdt('Poly', None, electrode_table_region)
+eseries = tdt.extract_tdt('ECoG', None, electrode_table_region)
 
 
 
