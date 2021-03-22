@@ -18,10 +18,22 @@ class TdtManager():
             print(self.tdt_streams)
 
     def get_tdt_object(self):
+        '''
+        gets TDT meta data object
+
+        Returns:
+        - tdt_object: (struct) TDT meta data object
+        '''
         tdt_object = tdt.read_block(self.tdt_path, headers=1)
         return tdt_object
 
     def get_stream_list(self):
+        '''
+        gets TDT meta data object
+
+        Returns:
+        - streams: (list) list of TDT stream names in file
+        '''
         x = list(self.tdt_object['stores'].__dict__.items())
         streams = [e[0] for e in x]
         return streams
@@ -43,7 +55,7 @@ class TdtManager():
             for stream in self.tdt_streams:
                 error_message += stream + ', '
             raise AttributeError(error_message)
-            
+
         data, tdt_params = self.__extract_stream_data(device_name, dev_conf)
         rate = tdt_params['sample_rate']
         start_time = tdt_params['start_time']
@@ -57,15 +69,27 @@ class TdtManager():
                                     # **add_other_fields_as_necessary
                                     )
         return e_series
-    
+
     def __extract_stream_data(self, device_name, dev_conf):
+        '''
+        extracts TDT stream
+
+        Args:
+        - device_name: (str) stream name (eg. 'ECoG' or 'Poly')
+        - dev_conf: (dict) metadata for the device.
+                           nwb_builder.metadata['device'][device_name]        
+
+        Returns:
+        - data: (numpy array) [samples] by [channels]
+        - parameters (dict) includes stream meta data
+        '''
         tdt_struct = tdt.read_block(self.tdt_path, store=device_name)
         stream = tdt_struct.streams[device_name]
         data = stream.data.T
         parameters = {'start_time': stream.start_time,
                       'sample_rate': stream.fs}
         return data, parameters
-        
+
     ### Iterative now fails bc it results in a eseries of 1 and 0s ###
     ### Not sure what changed from last time ###
     # def __iter_tdt_channels(self, tdt_path, stream, header, num_channels):
@@ -103,9 +127,9 @@ class TdtManager():
     #     Args:
     #     - device_name : (str) data stream name such as'ECoG' or 'Poly'
     #     - dev_conf: (dict) metadata for the device.
-    #                        nwb_builder.metadata['device'][device_name]       
+    #                        nwb_builder.metadata['device'][device_name]
 
-    #     Returns: data, tdt_parms (tuple): 
+    #     Returns: data, tdt_parms (tuple):
     #     - data : (DataChunkIterator) tdt data as an iterator object
     #     - tdt_params: (dict) tdt recording meta-data
     #     '''
