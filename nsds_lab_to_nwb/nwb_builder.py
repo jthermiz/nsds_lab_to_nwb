@@ -8,7 +8,8 @@ import pytz
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.file import Subject
 
-from nsds_lab_to_nwb.common.data_scanner import AuditoryDataScanner, BehaviorDataScanner
+from nsds_lab_to_nwb.common.auditory_data_scanner import AuditoryDataScanner
+from nsds_lab_to_nwb.common.behavior_data_scanner import BehaviorDataScanner
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
 
 from nsds_lab_to_nwb.components.device.device_originator import DeviceOriginator
@@ -48,9 +49,9 @@ class NWBBuilder:
         self.metadata = nwb_metadata.metadata
         self.out_path = out_path
         self.session_start_time = session_start_time
-        
+
         self.experiment_type = self.metadata['experiment_type'] # now required
-        
+
         # scan data_path and identify relevant subdirectories
         if self.experiment_type == 'auditory':
             data_scanner = AuditoryDataScanner(
@@ -82,12 +83,12 @@ class NWBBuilder:
 
     def build(self, use_htk=False):
         '''Build NWB file content.
-        
+
         Parameters
         ----------
         use_htk: applicable for auditory datasets only.
                 if False, use HTK files. if True, use TDT files directly.
-        
+
         Returns:
         --------
         nwb_content: an NWBFile object.
@@ -119,7 +120,7 @@ class NWBBuilder:
         self.device_originator.make(nwb_content)
         self.electrode_groups_originator.make(nwb_content)
         electrode_table_regions = self.electrodes_originator.make(nwb_content)
-        
+
         if self.experiment_type == 'auditory':
             if use_htk:
                 # legacy pipeline
