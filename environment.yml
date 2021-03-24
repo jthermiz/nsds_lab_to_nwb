@@ -1,9 +1,12 @@
+# to create a new conda environment, run:
+# >> conda env create -f environment.yml
 # to update your existing conda environment, run:
 # >> conda env update -f environment.yml
 #
-# to create a new environment from this file, run:
+# to create a new environment with a different name, run:
 # >> conda env create --name ENV_NAME --file=environment.yml
 # ----------------------------------------------------------
+name: nsds_lab_to_nwb
 channels:
   - defaults
   - conda-forge
@@ -24,4 +27,3 @@ dependencies:
     - sphinx-rtd-theme
     - sphinx-gallery
     - -rrequirements.txt
-
