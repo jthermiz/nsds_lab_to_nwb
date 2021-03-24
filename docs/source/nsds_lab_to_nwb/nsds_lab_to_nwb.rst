@@ -1,31 +1,20 @@
 nsds\_lab\_to\_nwb API
-==========================
+======================
 
-Subpackages
------------
+API Components
+--------------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
    nsds_lab_to_nwb.common
    nsds_lab_to_nwb.components
    nsds_lab_to_nwb.metadata
 
-Submodules
+NWB Builder
 ----------
 
-nsds\_lab\_to\_nwb.nwb\_builder module
---------------------------------------
-
 .. automodule:: nsds_lab_to_nwb.nwb_builder
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: nsds_lab_to_nwb
    :members:
    :undoc-members:
    :show-inheritance:

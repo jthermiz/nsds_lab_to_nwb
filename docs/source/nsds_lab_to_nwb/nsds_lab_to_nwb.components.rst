@@ -1,8 +1,5 @@
-nsds\_lab\_to\_nwb.components package
-=====================================
-
-Subpackages
------------
+nsds\_lab\_to\_nwb.components API
+=================================
 
 .. toctree::
    :maxdepth: 4
@@ -12,9 +9,6 @@ Subpackages
    nsds_lab_to_nwb.components.htk
    nsds_lab_to_nwb.components.stimulus
    nsds_lab_to_nwb.components.tdt
-
-Module contents
----------------
 
 .. automodule:: nsds_lab_to_nwb.components
    :members:
