@@ -9,8 +9,8 @@ USER_HOME = os.path.expanduser("~")
 # --- user input and metadata for an experiment block ---
 
 animal_name = 'R56'
-block = 'B10'
-# block = 'B13'
+# block = 'B10'
+block = 'B13'
 
 # raw data path
 data_path = '/clusterfs/NSDS_data/hackathon20201201/'
