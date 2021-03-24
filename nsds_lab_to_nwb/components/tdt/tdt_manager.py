@@ -1,5 +1,6 @@
 import tdt
 import numpy as np
+import warnings
 from pynwb.ecephys import ElectricalSeries
 from hdmf.data_utils import DataChunkIterator
 
@@ -54,7 +55,11 @@ class TdtManager():
             error_message = 'Device or stream not found. Available streams: '
             for stream in self.tdt_streams:
                 error_message += stream + ', '
-            raise AttributeError(error_message)
+            # raise AttributeError(error_message)
+            # -- instead just warn and skip this probe;
+            # -- None will be detected as an error flag in tdt_originator
+            warnings.warn(error_message)
+            return None
 
         data, tdt_params = self.__extract_stream_data(device_name, dev_conf)
         rate = tdt_params['sample_rate']
@@ -77,7 +82,7 @@ class TdtManager():
         Args:
         - device_name: (str) stream name (eg. 'ECoG' or 'Poly')
         - dev_conf: (dict) metadata for the device.
-                           nwb_builder.metadata['device'][device_name]        
+                           nwb_builder.metadata['device'][device_name]
 
         Returns:
         - data: (numpy array) [samples] by [channels]

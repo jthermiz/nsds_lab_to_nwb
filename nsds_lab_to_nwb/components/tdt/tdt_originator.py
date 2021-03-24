@@ -14,4 +14,5 @@ class TdtOriginator():
             e_series = self.tdt_manager.extract_tdt(device_name,
                                                     dev_conf,
                                                     electrode_table_regions[device_name])
-            nwb_content.add_acquisition(e_series)
+            if e_series is not None:
+                nwb_content.add_acquisition(e_series)
