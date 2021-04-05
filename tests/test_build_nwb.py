@@ -91,9 +91,6 @@ class TestCase_Build_NWB(unittest.TestCase):
                         )
         # build the NWB file content
         nwb_content = nwb_builder.build(process_stim=True, use_htk=True)
-        io = NWBHDF5IO('test_htk.nwb', 'w')
-        io.write(nwb_content)
-        io.close()
 
 if __name__ == '__main__':
     unittest.main()
