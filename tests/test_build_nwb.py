@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import unittest
+import sys
+sys.path.insert(0, '.')
 
 from nsds_lab_to_nwb.nwb_builder import NWBBuilder
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
@@ -12,7 +14,7 @@ USER_HOME = os.path.expanduser("~")
 class TestCase_Build_NWB(unittest.TestCase):
 
     # raw data path
-    data_path = '/clusterfs/NSDS_data/hackathon20201201/'
+    data_path = '/home/jhermiz/data/hackathon20201201/RatArchive/'
 
     # new base?
     # data_path_tdt = '/clusterfs/NSDS_data/hackathon20201201/TTankBackup/'
@@ -63,6 +65,24 @@ class TestCase_Build_NWB(unittest.TestCase):
                         )
         # build the NWB file content
         nwb_content = nwb_builder.build(process_stim=False)
+
+    def test_build_nwb_case3_htk(self):
+        ''' build NWB but do not write file to disk '''
+        animal_name = 'R56'
+        block = 'B13'
+        block_name = '{}_{}'.format(animal_name, block)
+
+        # create a builder for the block
+        nwb_builder = NWBBuilder(
+                        animal_name=animal_name,
+                        block=block,
+                        data_path=self.data_path,
+                        out_path=self.out_path
+                        )
+        # build the NWB file content
+        nwb_content = nwb_builder.build(use_htk=True, process_stim=False)
+
+
 
 if __name__ == '__main__':
     unittest.main()
