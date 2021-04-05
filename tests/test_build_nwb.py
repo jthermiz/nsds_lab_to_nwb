@@ -15,7 +15,7 @@ USER_HOME = os.path.expanduser("~")
 class TestCase_Build_NWB(unittest.TestCase):
 
     # raw data path
-    data_path = '/home/jhermiz/data/hackathon20201201/'
+    data_path = '/clusterfs/NSDS_data/hackathon20201201/'
 
     # new base?
     # data_path_tdt = '/clusterfs/NSDS_data/hackathon20201201/TTankBackup/'
