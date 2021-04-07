@@ -41,7 +41,8 @@ class NWBBuilder:
             block: str,
             nwb_metadata: MetadataManager,
             out_path: str = '',
-            session_start_time = _DEFAULT_SESSION_START_TIME
+            session_start_time = _DEFAULT_SESSION_START_TIME,
+            use_htk = False
     ):
         self.data_path = data_path
         self.animal_name = animal_name
@@ -49,6 +50,7 @@ class NWBBuilder:
         self.metadata = nwb_metadata.metadata
         self.out_path = out_path
         self.session_start_time = session_start_time
+        self.use_htk = use_htk
 
         self.experiment_type = self.metadata['experiment_type'] # now required
 
@@ -72,8 +74,10 @@ class NWBBuilder:
         self.electrode_groups_originator = ElectrodeGroupsOriginator(self.metadata)
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
         if self.experiment_type == 'auditory':
-            self.htk_originator = HtkOriginator(self.dataset, self.metadata)
-            self.tdt_originator = TdtOriginator(self.dataset, self.metadata)
+            if self.use_htk:
+                self.htk_originator = HtkOriginator(self.dataset, self.metadata)
+            else:
+                self.tdt_originator = TdtOriginator(self.dataset, self.metadata)
             self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
         elif self.experiment_type == 'behavior':
             # TODO: implement originators as needed
@@ -81,7 +85,7 @@ class NWBBuilder:
         else:
             raise ValueError('unknown experiment type')
 
-    def build(self, use_htk=False, process_stim=True):
+    def build(self, process_stim=True):
         '''Build NWB file content.
 
         Parameters
@@ -124,7 +128,7 @@ class NWBBuilder:
         electrode_table_regions = self.electrodes_originator.make(nwb_content)
 
         if self.experiment_type == 'auditory':
-            if use_htk:
+            if self.use_htk:
                 # legacy pipeline
                 self.htk_originator.make(nwb_content, electrode_table_regions)
             else:
