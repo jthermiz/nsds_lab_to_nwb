@@ -25,8 +25,12 @@ library_path = os.path.join(USER_HOME, 'Src/NSDSLab-NWB-metadata/')
 
 # --- collect metadata needed to build the NWB file ---
 
-nwb_metadata = MetadataManager(block_metadata_path=block_metadata_path,
-                               library_path=library_path)
+block_name = '{}_{}'.format(animal_name, block)
+nwb_metadata = MetadataManager(
+                    block_name=block_name, # required for new pipeline
+                    block_metadata_path=block_metadata_path,
+                    library_path=library_path
+                    )
 
 
 # --- build NWB file for the specified block ---
@@ -37,12 +41,13 @@ nwb_builder = NWBBuilder(
                 block=block,
                 data_path=data_path,
                 out_path=out_path,
-                nwb_metadata=nwb_metadata
+                nwb_metadata=nwb_metadata,
+                use_htk=True # for testing HTK pipeline (default is False)
                 )
 
 # build the NWB file content
 nwb_content = nwb_builder.build()
-# nwb_content = nwb_builder.build(use_htk=True) # for testing non-TDT features
 
 # write to file
 nwb_builder.write(nwb_content)
+
