@@ -85,7 +85,7 @@ class NWBBuilder:
         else:
             raise ValueError('unknown experiment type')
 
-    def build(self, use_htk=False, process_stim=True):
+    def build(self, process_stim=True):
         '''Build NWB file content.
 
         Parameters
@@ -128,7 +128,7 @@ class NWBBuilder:
         electrode_table_regions = self.electrodes_originator.make(nwb_content)
 
         if self.experiment_type == 'auditory':
-            if use_htk:
+            if self.use_htk:
                 # legacy pipeline
                 self.htk_originator.make(nwb_content, electrode_table_regions)
             else:

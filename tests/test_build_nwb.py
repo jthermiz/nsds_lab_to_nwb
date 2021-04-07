@@ -90,7 +90,7 @@ class TestCase_Build_NWB(unittest.TestCase):
                         use_htk=True
                         )
         # build the NWB file content
-        nwb_content = nwb_builder.build(process_stim=True, use_htk=True)
+        nwb_content = nwb_builder.build(process_stim=True)
 
 if __name__ == '__main__':
     unittest.main()
