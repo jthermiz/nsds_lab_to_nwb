@@ -1,7 +1,16 @@
 import tdt
 
 class TDTReader():
+    """TDT interface
+    """
     def __init__(self, path, verbose=False, channels=None):
+        """
+
+        Args:
+            path (str): path to tdt folder
+            verbose (bool, optional): whether to print debugging statements. Defaults to False.
+            channels (list, optional): list of channel ids to import. Defaults to None.
+        """
         self.path = path
         self.channels = channels
         self.verbose = verbose
@@ -20,11 +29,24 @@ class TDTReader():
             print(self.streams)
     
     def get_streams(self):
+        """Get TDT all stream names
+
+        Returns:
+            streams (list): stream names
+        """
         x = list(self.tdt_obj['streams'].__dict__.items())
         streams = [e[0] for e in x]
         return streams
     
     def get_metadata(self, stream):
+        """Get specified stream metadata
+
+        Args:
+            stream (string): stream name
+
+        Returns:
+            meta (dict): dictionary containing stream recording parameters
+        """
         meta = {}
         meta['sample_rate'] = self.tdt_obj['streams'][stream]['fs']
         meta['channel_ids'] = self.tdt_obj['streams'][stream]['channel']
@@ -32,32 +54,25 @@ class TDTReader():
         return meta        
     
     def get_data(self, stream):
+        """Get specified stream data
+
+        Args:
+            stream (string): stream name
+
+        Returns:
+            mat, meta (np-array, dict): Returns tuple of data matrix (wide form) 
+                                        and metadata dictionary
+        """
         mat = self.tdt_obj['streams'][stream]['data']
         meta = self.get_metadata(stream)
         return mat, meta
 
     def get_events(self):
+        """Get event onset markers
+
+        Returns:
+            events (list): list of samples where an event occured
+        """
         events = self.tdt_obj['epocs']['mark']['onset']
         return events
     
-'''
-#%% Test cases
-
-data_directory = '/home/jhermiz/data/aer/RVG06_B03'
-tobj = TDTReader(data_directory)
-print(tobj)
-# %%
-
-data, meta = tobj.get_data('Wave')
-print(data.shape)
-
-# %%
-print(meta)
-# %%
-events = tobj.get_events()
-len(events)
-# %%
-streams = tobj.get_streams()
-print(streams)
-
-'''
