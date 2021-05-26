@@ -1,4 +1,5 @@
 import tdt
+import warnings
 
 class TDTReader():
     """TDT interface
@@ -34,8 +35,7 @@ class TDTReader():
         Returns:
             streams (list): stream names
         """
-        x = list(self.tdt_obj['streams'].__dict__.items())
-        streams = [e[0] for e in x]
+        streams = list(self.tdt_obj['streams'].keys())
         return streams
     
     def get_metadata(self, stream):
@@ -45,13 +45,40 @@ class TDTReader():
             stream (string): stream name
 
         Returns:
-            meta (dict): dictionary containing stream recording parameters
+            meta (dict): dictionary containing stream recording parameters (if no stream returns None)
         """
-        meta = {}
-        meta['sample_rate'] = self.tdt_obj['streams'][stream]['fs']
-        meta['channel_ids'] = self.tdt_obj['streams'][stream]['channel']
-        meta['num_channels'], meta['num_samples'] = self.tdt_obj['streams'][stream]['data'].shape
-        return meta        
+        stream_exist = self.check_stream(stream)
+        if stream_exist:
+            meta = {}
+            meta['sample_rate'] = self.tdt_obj['streams'][stream]['fs']
+            meta['channel_ids'] = self.tdt_obj['streams'][stream]['channel']
+            data_shape = self.tdt_obj['streams'][stream]['data'].shape
+            if len(data_shape) == 1:
+                meta['num_samples'] = data_shape[0]
+                meta['num_channels'] = 1
+            else:
+                meta['num_channels'], meta['num_samples'] = data_shape
+            return meta       
+        else:
+            return None 
+    
+    def check_stream(self, stream):
+        """Checks to see if user specified stream exists in data
+
+        Args:
+            stream (string): stream name
+
+        Returns:
+            stream_available (bool): whether stream exisits
+        """
+        stream_available = True
+        if stream not in self.streams:
+            error_message = 'Device or stream not found. Available streams: '
+            stream_available = False
+            for stream in self.streams:
+                error_message += stream + ', '
+            warnings.warn(error_message)
+        return stream_available
     
     def get_data(self, stream):
         """Get specified stream data
@@ -61,11 +88,15 @@ class TDTReader():
 
         Returns:
             mat, meta (np-array, dict): Returns tuple of data matrix (wide form) 
-                                        and metadata dictionary
+                                        and metadata dictionary (if no stream returns None)
         """
-        mat = self.tdt_obj['streams'][stream]['data']
-        meta = self.get_metadata(stream)
-        return mat, meta
+        stream_exisit = self.check_stream(stream)
+        if stream_exisit:
+            mat = self.tdt_obj['streams'][stream]['data']
+            meta = self.get_metadata(stream)
+            return mat, meta
+        else:
+            return None
 
     def get_events(self):
         """Get event onset markers
@@ -75,4 +106,6 @@ class TDTReader():
         """
         events = self.tdt_obj['epocs']['mark']['onset']
         return events
+
+    
     
