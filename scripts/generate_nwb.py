@@ -1,8 +1,19 @@
 import logging.config
 import os
+import argparse
 
 from nsds_lab_to_nwb.nwb_builder import NWBBuilder
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
+
+parser = argparse.ArgumentParser(description='Convert to a NWB file.')
+parser.add_argument('data_path', type=str)
+parser.add_argument('library_path', type=str)
+parser.add_argument('yaml_path', type=str)
+parser.add_argument('save_path', type=str)
+parser.add_argument('animal_name', type=str)
+parser.add_argument('block', type=str)
+
+args = parser.parse_args()
 
 PWD = os.path.dirname(os.path.abspath(__file__))
 USER_HOME = os.path.expanduser("~")
@@ -12,22 +23,21 @@ logging.config.fileConfig(fname=str(PWD) + '/../nsds_lab_to_nwb/logging.conf', d
 
 # --- user input and metadata for an experiment block ---
 
-animal_name = 'R56'
-# block = 'B10'
-block = 'B13'
+data_path = args.data_path
+library_path = args.library_path
+yaml_path = args.yaml_path
+save_path = args.save_path
+animal_name = args.animal_name
+block = args.block
+block_name = '{}_{}'.format(animal_name, block)
 
-# raw data path
-data_path = '/clusterfs/NSDS_data/hackathon20201201/'
+# --- collect metadata needed to build the NWB file ---
 
-# output path
-out_path = os.path.join(USER_HOME, 'Data/nwb_test/')
-
-# link to metadata files
-block_metadata_path = os.path.join(PWD, f'../yaml/{animal_name}/{animal_name}_{block}.yaml')
-metadata_lib_path = os.path.join(USER_HOME, 'Src/NSDSLab-NWB-metadata/')
-stim_lib_path = None # not used
-# stim_lib_path = os.path.join(metadata_lib_path, 'auditory',
-#         'configs_legacy/mars_configs/') # <<<< should move to a stable location
+nwb_metadata = MetadataManager(
+                    block_name=block_name, # required for new pipeline
+                    block_metadata_path=yaml_path,
+                    library_path=library_path
+                    )
 
 
 # --- build NWB file for the specified block ---
@@ -39,12 +49,9 @@ nwb_builder = NWBBuilder(
                 animal_name=animal_name,
                 block=block,
                 data_path=data_path,
-                out_path=out_path,
-                block_metadata_path=block_metadata_path,
-                metadata_lib_path=metadata_lib_path,
-                stim_lib_path=stim_lib_path,
-                #use_htk=True # for testing HTK pipeline (default is False)
-                )
+                out_path=save_path,
+                nwb_metadata=nwb_metadata,
+                use_htk=False)
 
 # build the NWB file content
 nwb_content = nwb_builder.build()
