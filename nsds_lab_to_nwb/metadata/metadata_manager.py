@@ -1,5 +1,4 @@
 import os
-import io
 import json
 import yaml
 import csv
@@ -7,13 +6,24 @@ import pandas as pd
 
 # from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 
-_DEFAULT_EXPERIMENT_TYPE = 'auditory' # for legacy sessions
+
+_DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
 
 
 class MetadataManager:
-    '''Manages metadata for NWB file builder
-    '''
+    """Manages metadata for NWB file builder
 
+    Parameters
+    ----------
+    data_path : str
+        Path to data root. Folder should contain animal folders.
+    block_name : str
+        Block name in `<animal>_B<block number>` format.
+    metadata_path : str
+        Path to metadata library.
+    legacy_block : bool (optional)
+        If `True`, assumes legacy folder structure.
+    """
     def __init__(self,
                  block_metadata_path: str,
                  library_path: str,
@@ -28,8 +38,6 @@ class MetadataManager:
         self.__detect_which_pipeline(use_old_pipeline)
 
         self.read_block_metadata_file(block_name=block_name)
-        if self.animal_name is None:
-            self.animal_name = self.block_name.split('_')[0]
 
         # paths to metadata/stimulus library
         self.yaml_lib_path = os.path.join(self.library_path, self.experiment_type, 'yaml/')
@@ -56,7 +64,7 @@ class MetadataManager:
             block_name=None,
             default_experiment_type=_DEFAULT_EXPERIMENT_TYPE):
 
-        if self.use_old_pipeline:
+        if self.legacy_block:
             # direct input from the block yaml file (not yet expanded)
             self.block_metadata_input = self.read_yaml(self.block_metadata_path)
         else:
@@ -68,11 +76,11 @@ class MetadataManager:
         # new requirement for nsdslab data: experiment_type
         self.experiment_type = self.block_metadata_input.pop('experiment_type', default_experiment_type)
 
-        if self.use_old_pipeline:
+        if self.legacy_block:
             return
-        self.__extend_experiment_and_device_metadata_new_pipeline()
+        self.__extend_experiment_and_device_metadata()
 
-    def __extend_experiment_and_device_metadata_new_pipeline(self):
+    def __extend_experiment_and_device_metadata(self):
         # this is somewhat ad hoc.
         # new metadata pipeline will be updated in the near future
 
