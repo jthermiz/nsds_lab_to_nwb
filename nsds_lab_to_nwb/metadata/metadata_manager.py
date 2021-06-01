@@ -3,6 +3,7 @@ import json
 import yaml
 import csv
 import pandas as pd
+from . import split_block_folder
 
 # from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 
@@ -37,7 +38,7 @@ class MetadataManager:
         self.animal_name = animal_name
         self.__detect_which_pipeline(use_old_pipeline)
 
-        self.read_block_metadata_file(block_name=block_name)
+        self.read_block_metadata_file(block_folder=block_folder)
 
         # paths to metadata/stimulus library
         self.yaml_lib_path = os.path.join(self.library_path, self.experiment_type, 'yaml/')
@@ -68,10 +69,8 @@ class MetadataManager:
             # direct input from the block yaml file (not yet expanded)
             self.block_metadata_input = self.read_yaml(self.block_metadata_path)
         else:
-            block_id = int(block_name.split('_B')[1])
+            _, block_id = split_block_folder(block_folder.split('_B')[1])
             self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
-
-        self.block_name = self.block_metadata_input.pop('name', block_name)
 
         # new requirement for nsdslab data: experiment_type
         self.experiment_type = self.block_metadata_input.pop('experiment_type', default_experiment_type)

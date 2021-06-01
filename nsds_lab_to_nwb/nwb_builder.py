@@ -1,7 +1,6 @@
 import logging.config
 import sys
 import os
-from os.path import join, exists
 import uuid
 from datetime import datetime
 import pytz
