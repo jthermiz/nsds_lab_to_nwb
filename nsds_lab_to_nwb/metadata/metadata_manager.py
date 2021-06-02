@@ -5,7 +5,7 @@ import yaml
 import csv
 import pandas as pd
 
-from nsds_lab_to_nwb.metadata.stim_value_extractor import StimValueExtractor
+# from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory' # for legacy sessions
 
@@ -17,13 +17,15 @@ class MetadataManager:
     def __init__(self,
                  block_metadata_path: str,
                  library_path: str,
+                 stim_lib_path = None,
                  block_name = None,
-                 animal_name = None
+                 animal_name = None,
+                 use_old_pipeline = None,
                  ):
         self.block_metadata_path = block_metadata_path
         self.library_path = library_path
         self.animal_name = animal_name
-        self.__detect_which_pipeline()
+        self.__detect_which_pipeline(use_old_pipeline)
 
         self.read_block_metadata_file(block_name=block_name)
         if self.animal_name is None:
@@ -31,14 +33,17 @@ class MetadataManager:
 
         # paths to metadata/stimulus library
         self.yaml_lib_path = os.path.join(self.library_path, self.experiment_type, 'yaml/')
-        if self.experiment_type == 'auditory':
-            self.stim_lib_path = os.path.join(self.library_path, self.experiment_type,
-                    'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
+        # if (stim_lib_path is None) and (self.experiment_type == 'auditory'):
+        #     stim_lib_path = os.path.join(self.library_path, self.experiment_type,
+        #             'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
+        self.stim_lib_path = stim_lib_path
 
-        self.metadata = self.extract_metadata()
+    def __detect_which_pipeline(self, use_old_pipeline):
+        if (use_old_pipeline is not None) and isinstance(use_old_pipeline, bool):
+            self.use_old_pipeline = use_old_pipeline
+            return
 
-    def __detect_which_pipeline(self):
-        # detect which pipeline is used
+        # detect which pipeline is used, based on metadata format
         _, ext = os.path.splitext(self.block_metadata_path)
         if ext in ('.yaml', '.yml'):
             self.use_old_pipeline = True
@@ -203,7 +208,10 @@ class MetadataManager:
                             self.yaml_lib_path, key, filename + '.yaml'))
         elif isinstance(filename, dict):
             ref_data = filename
-        self.__load_stim_values(ref_data)
+
+        # self.__load_stim_values(ref_data) # <<< now moved to WavManager
+        ref_data['stim_lib_path'] = self.stim_lib_path # pass stim library path (ad hoc)
+
         metadata[key] = ref_data
 
     def __check_subject(self, metadata):
@@ -228,12 +236,11 @@ class MetadataManager:
         '''load stim_values from .mat or .csv files,
         or generate using original script (mars/configs/block_directory.py)
         '''
-        if not ('stim_values' in stimulus_metadata):
-            stimulus_metadata['stim_values'] = None
-            return
-        stimulus_metadata['stim_values'] = StimValueExtractor(
-            stimulus_metadata['stim_values'], self.stim_lib_path
-            ).extract()
+        # --- skip this for now; extract in NWB builder if necessary ---
+        # stimulus_metadata['stim_values'] = StimValueExtractor(
+        #     stimulus_metadata['stim_values'], self.stim_lib_path
+        #     ).extract()
+        pass
 
 
     @staticmethod
