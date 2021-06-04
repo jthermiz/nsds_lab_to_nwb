@@ -9,70 +9,53 @@ from nsds_lab_to_nwb.common.io import read_yaml, csv_to_dict
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
 
-
-class MetadataManager:
-    """Manages metadata for NWB file builder
-
-    Parameters
-    ----------
-    block_metadata_path : str
-        Path to block metadata file.
-    metadata_lib_path : str
-        Path to metadata library repo.
-    stim_lib_path : str
-        Path to stimulus library.
-    block_folder : str
-        Block specification.
-    """
+class LegacyMetadataReader:
+    ''' Reads metadata input for old experiments.
+    '''
     def __init__(self,
-                 block_metadata_path: str,
-                 metadata_lib_path=None,
-                 stim_lib_path=None,
-                 block_folder=None,
-                 ):
+                block_metadata_path: str,
+                library_path: str,
+                block_name: str,
+                ):
         self.block_metadata_path = block_metadata_path
-        self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
-        self.stim_lib_path = get_stim_lib_path(stim_lib_path)
-        self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
-        self.__detect_legacy_block()
+        self.library_path = library_path
+        self.block_name = block_name
 
-        self.read_block_metadata_file(block_folder=block_folder)
+    def read_block_metadata(self):
+        # direct input from the block yaml file (not yet expanded)
+        self.block_metadata_input = read_yaml(self.block_metadata_path)
+        return self.block_metadata_input
 
-        # paths to metadata/stimulus library
-        self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
-        # if (stim_lib_path is None) and (self.experiment_type == 'auditory'):
-        #     stim_lib_path = os.path.join(self.library_path, self.experiment_type,
-        #             'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
 
-    def __detect_legacy_block(self):
-        # detect which pipeline is used, based on metadata format
-        _, ext = os.path.splitext(self.block_metadata_path)
-        if ext in ('.yaml', '.yml'):
-            self.legacy_block = True
-        elif ext == '.csv':
-            self.legacy_block = False
-        else:
-            raise ValueError('unknown block metadata format')
+class MetadataReader:
+    ''' Reads metadata input for new experiments.
+    '''
+    def __init__(self,
+                block_metadata_path: str,
+                library_path: str,
+                block_name: str,
+                ):
+        self.block_metadata_path = block_metadata_path
+        self.library_path = library_path
+        self.block_name = block_name
 
-    def read_block_metadata_file(self,
-            block_folder=None,
-            default_experiment_type=_DEFAULT_EXPERIMENT_TYPE):
+    def read_block_metadata(self):
+        # direct input from the block yaml file (not yet expanded)
+        block_id = int(block_name.split('_B')[1])
+        self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
 
-        if self.legacy_block:
-            # direct input from the block yaml file (not yet expanded)
-            self.block_metadata_input = read_yaml(self.block_metadata_path)
-        else:
-            block_id = self.block_name[1:]
-            self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
+        # CAVEAT: keys 'name' and 'experiment_type' should not be expanded
+        self.__extend_experiment_and_device_metadata_new_pipeline()
+        return self.block_metadata_input
 
-        # new requirement for nsdslab data: experiment_type
-        self.experiment_type = self.block_metadata_input.pop('experiment_type', default_experiment_type)
+    @staticmethod
+    def read_csv_row(file_path, block_id):
+        all_blocks = pd.read_csv(file_path)
+        blk_row = all_blocks.loc[all_blocks['block_id'] == block_id] # single row of DataFrame
+        blk_dict = blk_row.to_dict(orient='records')[0] # a dict
+        return blk_dict
 
-        if self.legacy_block:
-            return
-        self.__extend_experiment_and_device_metadata()
-
-    def __extend_experiment_and_device_metadata(self):
+    def __extend_experiment_and_device_metadata_new_pipeline(self):
         # this is somewhat ad hoc.
         # new metadata pipeline will be updated in the near future
 
@@ -100,6 +83,72 @@ class MetadataManager:
                     device_metadata['Poly'] = value
                 device_metadata[key] = value
         return device_metadata
+
+
+class MetadataManager:
+    """Manages metadata for NWB file builder
+
+    Parameters
+    ----------
+    block_metadata_path : str
+        Path to block metadata file.
+    metadata_lib_path : str
+        Path to metadata library repo.
+    stim_lib_path : str
+        Path to stimulus library.
+    block_folder : str
+        Block specification.
+    """
+    def __init__(self,
+                 block_metadata_path: str,
+                 metadata_lib_path=None,
+                 stim_lib_path=None,
+                 block_folder=None,
+                 ):
+        self.block_metadata_path = block_metadata_path
+        self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
+        self.stim_lib_path = get_stim_lib_path(stim_lib_path)
+        self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
+        self.__detect_legacy_block()
+
+        if self.use_old_pipeline:
+            self.reader = LegacyMetadataReader(
+                            block_metadata_path=self.block_metadata_path,
+                            library_path=self.metadata_lib_path,
+                            block_folder=block_folder)
+        else:
+            self.reader = MetadataReader(
+                            block_metadata_path=self.block_metadata_path,
+                            library_path=self.metadata_lib_path,
+                            block_folder=block_folder)
+
+
+        self.read_block_metadata_file(block_folder=block_folder)
+
+        # paths to metadata/stimulus library
+        self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
+        # if (stim_lib_path is None) and (self.experiment_type == 'auditory'):
+        #     stim_lib_path = os.path.join(self.library_path, self.experiment_type,
+        #             'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
+
+    def __detect_legacy_block(self):
+        # detect which pipeline is used, based on metadata format
+        _, ext = os.path.splitext(self.block_metadata_path)
+        if ext in ('.yaml', '.yml'):
+            self.legacy_block = True
+        elif ext == '.csv':
+            self.legacy_block = False
+        else:
+            raise ValueError('unknown block metadata format')
+
+    def read_block_metadata_file(self,
+            block_folder=None,
+            default_experiment_type=_DEFAULT_EXPERIMENT_TYPE):
+
+        self.block_metadata_input = self.reader.read_block_metadata()
+
+        # new requirement for nsdslab data: experiment_type
+        self.experiment_type = self.block_metadata_input.pop('experiment_type', default_experiment_type)
 
     def extract_metadata(self):
         metadata = {}
@@ -214,10 +263,3 @@ class MetadataManager:
             if key in ('ECoG', 'Poly'):
                 probe_path = os.path.join(self.yaml_lib_path, 'probe', value + '.yaml')
                 device_metadata[key] = read_yaml(probe_path)
-
-    @staticmethod
-    def read_csv_row(file_path, block_id):
-        all_blocks = pd.read_csv(file_path)
-        blk_row = all_blocks.loc[all_blocks['block_id'] == block_id] # single row of DataFrame
-        blk_dict = blk_row.to_dict(orient='records')[0] # a dict
-        return blk_dict
