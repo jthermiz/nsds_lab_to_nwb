@@ -4,7 +4,7 @@ import pandas as pd
 from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
 
-from nsds_lab_to_nwb.common.io import read_yaml
+from nsds_lab_to_nwb.common.io import read_yaml, csv_to_dict
 
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
@@ -79,7 +79,7 @@ class MetadataManager:
         # unpack experiment
         experiment_metadata_path = os.path.join(
             os.path.dirname(self.block_metadata_path), 'meta_data.csv')
-        experiment_metadata_input = self.csv_to_dict(experiment_metadata_path)
+        experiment_metadata_input = csv_to_dict(experiment_metadata_path)
 
         device_metadata_input = self.__separate_device_metadata(experiment_metadata_input)
         self.block_metadata_input['experiment'] = experiment_metadata_input
@@ -221,13 +221,3 @@ class MetadataManager:
         blk_row = all_blocks.loc[all_blocks['block_id'] == block_id] # single row of DataFrame
         blk_dict = blk_row.to_dict(orient='records')[0] # a dict
         return blk_dict
-
-    @staticmethod
-    def csv_to_dict(csv_file):
-        with open(csv_file, mode='r') as infile:
-            reader = csv.reader(infile)
-            mydict = {rows[0]:rows[1] for rows in reader}
-        # skip header
-        if ('key', 'value') in mydict.items():
-            mydict.pop('key')
-        return mydict
