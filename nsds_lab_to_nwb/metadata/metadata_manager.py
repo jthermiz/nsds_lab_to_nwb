@@ -1,11 +1,10 @@
 import os
-import json
-import yaml
 import csv
 import pandas as pd
 from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
 
+from nsds_lab_to_nwb.common.io import read_yaml
 
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
@@ -61,7 +60,7 @@ class MetadataManager:
 
         if self.legacy_block:
             # direct input from the block yaml file (not yet expanded)
-            self.block_metadata_input = self.read_yaml(self.block_metadata_path)
+            self.block_metadata_input = read_yaml(self.block_metadata_path)
         else:
             block_id = self.block_name[1:]
             self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
@@ -171,7 +170,7 @@ class MetadataManager:
 
     def expand_experiment(self, metadata, filename, key='experiment'):
         if isinstance(filename, str):
-            ref_data = self.read_yaml(os.path.join(
+            ref_data = read_yaml(os.path.join(
                             self.yaml_lib_path, key, filename + '.yaml'))
         elif isinstance(filename, dict):
             ref_data = filename
@@ -181,7 +180,7 @@ class MetadataManager:
 
     def expand_device(self, metadata, filename, key='device'):
         if isinstance(filename, str):
-            ref_data = self.read_yaml(os.path.join(
+            ref_data = read_yaml(os.path.join(
                             self.yaml_lib_path, key, filename + '.yaml'))
         elif isinstance(filename, dict):
             ref_data = filename
@@ -190,7 +189,7 @@ class MetadataManager:
 
     def expand_stimulus(self, metadata, filename, key='stimulus'):
         if isinstance(filename, str):
-            ref_data = self.read_yaml(os.path.join(
+            ref_data = read_yaml(os.path.join(
                             self.yaml_lib_path, key, filename + '.yaml'))
         elif isinstance(filename, dict):
             ref_data = filename
@@ -214,14 +213,7 @@ class MetadataManager:
         for key, value in device_metadata.items():
             if key in ('ECoG', 'Poly'):
                 probe_path = os.path.join(self.yaml_lib_path, 'probe', value + '.yaml')
-                device_metadata[key] = self.read_yaml(probe_path)
-
-    @staticmethod
-    def read_yaml(file_path):
-        with open(file_path, 'r') as stream:
-            metadata_dict = yaml.safe_load(stream)
-            metadata = json.loads(json.dumps(metadata_dict)) #, parse_int=str, parse_float=str)
-            return metadata
+                device_metadata[key] = read_yaml(probe_path)
 
     @staticmethod
     def read_csv_row(file_path, block_id):
