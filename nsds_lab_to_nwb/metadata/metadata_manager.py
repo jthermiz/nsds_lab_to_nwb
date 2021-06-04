@@ -6,7 +6,6 @@ import pandas as pd
 from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
 
-# from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
@@ -121,22 +120,7 @@ class MetadataManager:
                     raise ValueError('experiment type mismatch')
                 self.expand_stimulus(metadata, value)
                 continue
-            # else:
-            # --- ad hoc for new version ---
-            # if key == 'stim':
-            #     metadata['stimulus'] = {'name': self.block_metadata_input['stim']}
-            # ---
             metadata[key] = value
-
-        # --- ad hoc ---
-        # # unpack experiment
-        # experiment_metadata_path = os.path.join(
-        #     os.path.dirname(self.block_metadata_path), 'meta_data.csv')
-        # metadata['experiment'] = self.csv_to_dict(experiment_metadata_path)
-
-        # # unpack device
-        # self.__load_probes(metadata['device'])
-        # ---
 
         # set experiment description
         if self.experiment_type == 'auditory':
@@ -211,9 +195,7 @@ class MetadataManager:
         elif isinstance(filename, dict):
             ref_data = filename
 
-        # self.__load_stim_values(ref_data) # <<< now moved to WavManager
         ref_data['stim_lib_path'] = self.stim_lib_path # pass stim library path (ad hoc)
-
         metadata[key] = ref_data
 
     def __check_subject(self, metadata):
@@ -233,17 +215,6 @@ class MetadataManager:
             if key in ('ECoG', 'Poly'):
                 probe_path = os.path.join(self.yaml_lib_path, 'probe', value + '.yaml')
                 device_metadata[key] = self.read_yaml(probe_path)
-
-    def __load_stim_values(self, stimulus_metadata):
-        '''load stim_values from .mat or .csv files,
-        or generate using original script (mars/configs/block_directory.py)
-        '''
-        # --- skip this for now; extract in NWB builder if necessary ---
-        # stimulus_metadata['stim_values'] = StimValueExtractor(
-        #     stimulus_metadata['stim_values'], self.stim_lib_path
-        #     ).extract()
-        pass
-
 
     @staticmethod
     def read_yaml(file_path):
