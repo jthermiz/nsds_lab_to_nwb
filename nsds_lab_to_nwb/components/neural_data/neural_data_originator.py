@@ -12,10 +12,10 @@ class NeuralDataOriginator():
 
         if use_htk:
             logger.info('Using HTK')
-            self.neural_data_manager = HtkManager(self.dataset.raw_htk_path)
+            self.neural_data_manager = HtkManager(self.dataset.htk_path)
         else:
             logger.info('Using TDT')
-            self.neural_data_manager = TdtManager(self.dataset.raw_tdt_path)
+            self.neural_data_manager = TdtManager(self.dataset.tdt_path)
 
     def make(self, nwb_content, electrode_table_regions):
         for device_name, dev_conf in self.metadata['device'].items():

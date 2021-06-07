@@ -69,7 +69,7 @@ class NWBBuilder:
         logger.info('Preparing output path...')
         rat_out_dir = os.path.join(self.save_path, self.animal_name)
         os.makedirs(rat_out_dir, exist_ok=True)
-        self.output_file = os.path.join(rat_out_dir, f'{self.block}.nwb')
+        self.output_file = os.path.join(rat_out_dir, f'{self.block_folder}.nwb')
 
         logger.info('Creating originator instances...')
         self.device_originator = DeviceOriginator(self.metadata)
@@ -85,7 +85,7 @@ class NWBBuilder:
         self.metadata_manager = MetadataManager(
                             block_folder=self.block_folder, # required for new pipeline
                             block_metadata_path=block_metadata_path,
-                            library_path=metadata_lib_path,
+                            metadata_lib_path=metadata_lib_path,
                             stim_lib_path=stim_lib_path
                             )
         return self.metadata_manager.extract_metadata()
@@ -93,8 +93,7 @@ class NWBBuilder:
     def _collect_dataset_paths(self):
         # scan data_path and identify relevant subdirectories
         if self.experiment_type == 'auditory':
-            data_scanner = AuditoryDataScanner(
-                self.animal_name, self.block, data_path=self.data_path)
+            data_scanner = AuditoryDataScanner(self.block_folder, data_path=self.data_path)
         elif self.experiment_type == 'behavior':
             raise ValueError('behavior data not yet supported.')
         else:

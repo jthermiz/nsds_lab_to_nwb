@@ -3,7 +3,8 @@ import json
 import yaml
 import csv
 import pandas as pd
-from ..utils import split_block_folder
+from ..utils import (get_metadata_lib_path, get_stim_lib_path,
+                     split_block_folder)
 
 # from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 
@@ -40,11 +41,10 @@ class MetadataManager:
         self.read_block_metadata_file(block_folder=block_folder)
 
         # paths to metadata/stimulus library
-        self.yaml_lib_path = os.path.join(self.library_path, self.experiment_type, 'yaml/')
+        self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
         # if (stim_lib_path is None) and (self.experiment_type == 'auditory'):
         #     stim_lib_path = os.path.join(self.library_path, self.experiment_type,
         #             'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
-        self.stim_lib_path = stim_lib_path
 
     def __detect_legacy_block(self):
         # detect which pipeline is used, based on metadata format
@@ -57,14 +57,14 @@ class MetadataManager:
             raise ValueError('unknown block metadata format')
 
     def read_block_metadata_file(self,
-            block_name=None,
+            block_folder=None,
             default_experiment_type=_DEFAULT_EXPERIMENT_TYPE):
 
         if self.legacy_block:
             # direct input from the block yaml file (not yet expanded)
             self.block_metadata_input = self.read_yaml(self.block_metadata_path)
         else:
-            _, block_id = split_block_folder(block_folder.split('_B')[1])
+            block_id = self.block_name[1:]
             self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
 
         # new requirement for nsdslab data: experiment_type
