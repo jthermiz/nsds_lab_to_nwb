@@ -17,14 +17,14 @@ class MetadataManager:
 
     Parameters
     ----------
-    data_path : str
-        Path to data root. Folder should contain animal folders.
-    block_name : str
-        Block name in `<animal>_B<block number>` format.
-    metadata_path : str
-        Path to metadata library.
-    legacy_block : bool (optional)
-        If `True`, assumes legacy folder structure.
+    block_metadata_path : str
+        Path to block metadata file.
+    metadata_lib_path : str
+        Path to metadata library repo.
+    stim_lib_path : str
+        Path to stimulus library.
+    block_folder : str
+        Block specification.
     """
     def __init__(self,
                  block_metadata_path: str,

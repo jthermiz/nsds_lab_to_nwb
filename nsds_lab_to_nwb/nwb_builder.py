@@ -32,8 +32,27 @@ _DEFAULT_SESSION_START_TIME = datetime.fromtimestamp(0, tz=LOCAL_TIMEZONE) # dum
 
 
 class NWBBuilder:
-    '''Unpack data from a specified block, and write those data into NWB file format.
-    '''
+    """Unpack data from a specified block, and write those data into NWB file format.
+
+    Parameters
+    ----------
+    data_path : str
+        Path to top level data folder.
+    block_folder : str
+        Block specification.
+    save_path : str
+        Path to save folder.
+    block_metadata_path : str
+        Path to block metadata file.
+    metadata_lib_path : str
+        Path to metadata library repo.
+    stim_lib_path : str
+        Path to stimulus library.
+    session_start_time : float
+        Start time for NWB
+    use_htk : bool
+        Use data from HTK files.
+    """
 
     def __init__(
             self,
