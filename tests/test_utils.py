@@ -36,25 +36,25 @@ def test_get_data_path():
 
 def test_get_metadata_lib_path():
     """Tests metadata_lib_path function."""
-    data_path = '/home/user/metadata'
-    assert data_path == get_metadata_lib_path(data_path)
+    metadata_path = '/home/user/metadata'
+    assert metadata_path == get_metadata_lib_path(metadata_path)
     with pytest.raises(ValueError):
         get_metadata_lib_path(None)
-    data_path2 = '/home/user/new_metadata'
-    os.environ['NSDS_METADATA_PATH'] = data_path2
+    metadata_path2 = '/home/user/new_metadata'
+    os.environ['NSDS_METADATA_PATH'] = metadata_path2
 
-    assert data_path == get_metadata_lib_path(data_path)
-    assert data_path2 == get_metadata_lib_path(None)
+    assert metadata_path == get_metadata_lib_path(metadata_path)
+    assert metadata_path2 == get_metadata_lib_path(None)
 
 
 def test_get_stim_lib_path():
     """Tests stim_lib_path function."""
-    data_path = '/home/user/stim'
-    assert data_path == get_stim_lib_path(data_path)
+    stim_path = '/home/user/stim'
+    assert stim_path == get_stim_lib_path(stim_path)
     with pytest.raises(ValueError):
         get_stim_lib_path(None)
-    data_path2 = '/home/user/new_stim'
-    os.environ['NSDS_STIMULI_PATH'] = data_path2
+    stim_path2 = '/home/user/new_stim'
+    os.environ['NSDS_STIMULI_PATH'] = stim_path2
 
-    assert data_path == get_stim_lib_path(data_path)
-    assert data_path2 == get_stim_lib_path(None)
+    assert stim_path == get_stim_lib_path(stim_path)
+    assert stim_path2 == get_stim_lib_path(None)
