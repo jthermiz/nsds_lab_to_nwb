@@ -16,6 +16,8 @@ from nsds_lab_to_nwb.components.electrode.electrode_groups_originator import Ele
 from nsds_lab_to_nwb.components.electrode.electrodes_originator import ElectrodesOriginator
 from nsds_lab_to_nwb.components.neural_data.neural_data_originator import NeuralDataOriginator
 from nsds_lab_to_nwb.components.stimulus.stimulus_originator import StimulusOriginator
+from nsds_lab_to_nwb.utils import (get_data_path, get_metadata_lib_path, get_stim_lib_path,
+                                   split_block_folder)
 
 # basicConfig ignored if a filehandler is already set up (as in example scripts)
 logging.basicConfig(stream=sys.stderr)
@@ -35,20 +37,21 @@ class NWBBuilder:
 
     def __init__(
             self,
-            animal_name: str,
-            block: str,
             data_path: str,
-            out_path: str,
+            block_folder: str,
+            save_path: str,
             block_metadata_path: str,
             metadata_lib_path: str = '',
             stim_lib_path: str = '',
-            session_start_time = _DEFAULT_SESSION_START_TIME,
+            session_start_time=_DEFAULT_SESSION_START_TIME,
             use_htk = False
     ):
-        self.data_path = data_path
-        self.animal_name = animal_name
-        self.block = block
-        self.out_path = out_path
+        self.data_path = get_data_path(data_path)
+        self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
+        self.stim_lib_path = get_stim_lib_path(stim_lib_path)
+        self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
+        self.block_folder = block_folder
+        self.save_path = save_path
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = metadata_lib_path
         self.stim_lib_path = stim_lib_path
@@ -57,17 +60,16 @@ class NWBBuilder:
 
         logger.info('Collecting metadata for NWB conversion...')
         self.metadata = self._collect_nwb_metadata(block_metadata_path,
-                                            metadata_lib_path, stim_lib_path)
+                                                   metadata_lib_path, stim_lib_path)
         self.experiment_type = self.metadata['experiment_type']
 
         logger.info('Collecting relevant input data paths...')
         self.dataset = self._collect_dataset_paths()
 
         logger.info('Preparing output path...')
-        rat_out_dir = os.path.join(self.out_path, self.animal_name)
+        rat_out_dir = os.path.join(self.save_path, self.animal_name)
         os.makedirs(rat_out_dir, exist_ok=True)
-        self.output_file = os.path.join(rat_out_dir,
-                                self.animal_name + '_' + self.block + '.nwb')
+        self.output_file = os.path.join(rat_out_dir, f'{self.block}.nwb')
 
         logger.info('Creating originator instances...')
         self.device_originator = DeviceOriginator(self.metadata)
@@ -80,9 +82,8 @@ class NWBBuilder:
                                     metadata_lib_path,
                                     stim_lib_path):
         # collect metadata for NWB conversion
-        block_name = '{}_{}'.format(self.animal_name, self.block)
         self.metadata_manager = MetadataManager(
-                            block_name=block_name, # required for new pipeline
+                            block_folder=self.block_folder, # required for new pipeline
                             block_metadata_path=block_metadata_path,
                             library_path=metadata_lib_path,
                             stim_lib_path=stim_lib_path

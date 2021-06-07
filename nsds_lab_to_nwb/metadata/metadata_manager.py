@@ -3,7 +3,7 @@ import json
 import yaml
 import csv
 import pandas as pd
-from . import split_block_folder
+from ..utils import split_block_folder
 
 # from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 
@@ -27,16 +27,15 @@ class MetadataManager:
     """
     def __init__(self,
                  block_metadata_path: str,
-                 library_path: str,
-                 stim_lib_path = None,
-                 block_name = None,
-                 animal_name = None,
-                 use_old_pipeline = None,
+                 metadata_lib_path=None,
+                 stim_lib_path=None,
+                 block_folder=None,
                  ):
         self.block_metadata_path = block_metadata_path
-        self.library_path = library_path
-        self.animal_name = animal_name
-        self.__detect_which_pipeline(use_old_pipeline)
+        self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
+        self.stim_lib_path = get_stim_lib_path(stim_lib_path)
+        self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
+        self.__detect_legacy_block()
 
         self.read_block_metadata_file(block_folder=block_folder)
 
@@ -47,17 +46,13 @@ class MetadataManager:
         #             'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
         self.stim_lib_path = stim_lib_path
 
-    def __detect_which_pipeline(self, use_old_pipeline):
-        if (use_old_pipeline is not None) and isinstance(use_old_pipeline, bool):
-            self.use_old_pipeline = use_old_pipeline
-            return
-
+    def __detect_legacy_block(self):
         # detect which pipeline is used, based on metadata format
         _, ext = os.path.splitext(self.block_metadata_path)
         if ext in ('.yaml', '.yml'):
-            self.use_old_pipeline = True
+            self.legacy_block = True
         elif ext == '.csv':
-            self.use_old_pipeline = False
+            self.legacy_block = False
         else:
             raise ValueError('unknown block metadata format')
 
