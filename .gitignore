@@ -1,0 +1,41 @@
+###################################
+# Mac OS
+###################################
+
+# general
+.DS_Store
+.DS_Store?
+Icon
+
+# thumbnails
+._*
+
+# temporary autosave files
+*~
+
+
+###################################
+# Python
+###################################
+
+# python cache files
+__pycache__
+.ipynb_checkpoints
+.~*.ipynb
+
+# developer mode
+*.egg-info
+
+# sphinx
+docs/build/*
+docs/source/auto_examples/*
+docs/source/gen_modules/*
+
+
+###################################
+# Custom
+###################################
+
+# various log files 
+*.log
+

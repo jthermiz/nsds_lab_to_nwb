@@ -1,48 +1,52 @@
+#!/user/bin/env python
+import logging.config
 import os
+import argparse
 
+from nsds_lab_to_nwb.utils import (get_data_path, get_metadata_lib_path,
+                                   get_stim_lib_path)
 from nsds_lab_to_nwb.nwb_builder import NWBBuilder
-from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
+
 
 PWD = os.path.dirname(os.path.abspath(__file__))
-USER_HOME = os.path.expanduser("~")
+logging.config.fileConfig(fname=str(PWD) + '/../nsds_lab_to_nwb/logging.conf', disable_existing_loggers=False)
 
-# --- user input and metadata for an experiment block ---
+parser = argparse.ArgumentParser(description='Convert to a NWB file.')
+parser.add_argument('save_path', type=str, help='Path to save the NWB file.')
+parser.add_argument('block_folder', type=str, help='<animal>_<block> block specification.')
+parser.add_argument('block_metadata_path', type=str, help='Path to block metadata file.')
+parser.add_argument('--data_path', '-d', type=str, default=None,
+                    help='Path to the top level data folder.')
+parser.add_argument('--metadata_lib_path', '-m', type=str, default=None,
+                    help='Path to the metadata library repo.')
+parser.add_argument('--stim_lib_path', '-s', type=str, default=None,
+                    help='Path to the stimulus library.')
+parser.add_argument('--use_htk', '-k', action='store_true',
+                    help='Use data from HTK rather than TDT files.')
 
-animal_name = 'R56'
-block = 'B10'
-# block = 'B13'
-
-# raw data path
-data_path = '/clusterfs/NSDS_data/hackathon20201201/'
-
-# output path
-out_path = os.path.join(USER_HOME, 'Data/nwb_test/')
-
-# link to metadata files
-block_metadata_path = os.path.join(PWD, f'../yaml/{animal_name}/{animal_name}_{block}.yaml')
-library_path = os.path.join(USER_HOME, 'Src/NSDSLab-NWB-metadata/')
-
-
-# --- collect metadata needed to build the NWB file ---
-
-nwb_metadata = MetadataManager(block_metadata_path=block_metadata_path,
-                               library_path=library_path)
-
+args = parser.parse_args()
+save_path = args.save_path
+block_folder = args.block_folder
+block_metadata_path = args.block_metadata_path
+data_path = get_data_path(args.data_path)
+metadata_lib_path = get_metadata_lib_path(args.metadata_lib_path)
+stim_lib_path = get_stim_lib_path(args.stim_lib_path)
+use_htk = args.use_htk
 
 # --- build NWB file for the specified block ---
-
+# NOTE: metadata collection is now done in NWBBuilder.__init__()
 # create a builder for the block
 nwb_builder = NWBBuilder(
-                animal_name=animal_name,
-                block=block,
-                data_path=data_path,
-                out_path=out_path,
-                nwb_metadata=nwb_metadata
-                )
+    data_path=data_path,
+    block_folder=block_folder,
+    save_path=save_path,
+    block_metadata_path=block_metadata_path,
+    metadata_lib_path=metadata_lib_path,
+    stim_lib_path=stim_lib_path,
+    use_htk=use_htk)
 
 # build the NWB file content
 nwb_content = nwb_builder.build()
-# nwb_content = nwb_builder.build(use_htk=True) # for testing non-TDT features
 
 # write to file
 nwb_builder.write(nwb_content)
