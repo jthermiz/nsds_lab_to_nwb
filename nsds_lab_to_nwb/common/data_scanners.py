@@ -1,6 +1,9 @@
 import logging.config
 import os
 
+from nsds_lab_to_nwb.utils import (get_data_path, get_stim_lib_path,
+                                   split_block_folder)
+
 logger = logging.getLogger(__name__)
 
 
@@ -10,10 +13,9 @@ class Dataset():
     where the input data can be found.
     See the DataScanner classes for how the Dataset is constructed.
     '''
-    def __init__(self, data_path, animal_name, block, **path_kwargs):
+    def __init__(self, block_folder, data_path, **path_kwargs):
+        self.block_folder = block_folder
         self.data_path = data_path
-        self.animal_name = animal_name
-        self.block = block
 
         # store all paths
         for path_key, path_value in path_kwargs.items():
@@ -25,12 +27,13 @@ class DataScanner():
     Defines input path structure and stores relevant paths in a Dataset object.
     This is a base class for AuditoryDataScanner and BehaviorDataScanner classes.
     '''
-    def __init__(self, animal_name, block,
+    def __init__(self, block_folder,
                  data_path: str = '',
                  ):
         self.data_path = data_path
-        self.animal_name = animal_name
-        self.block = block
+        self.block_folder = block_folder
+        self.data_path = get_data_path(data_path)
+        self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
 
     def extract_dataset(self):
         ''' returns a Dataset object '''
@@ -39,48 +42,50 @@ class DataScanner():
 
 
 class AuditoryDataScanner(DataScanner):
-    def __init__(self, animal_name, block,
+    def __init__(self, block_folder,
                  data_path: str = '',
-                 stim_path=None,
-                 htk_path=None,
-                 tdt_path=None,
-                 ):
-        DataScanner.__init__(self, animal_name, block, data_path=data_path)
-        # this sets self.animal_name, self.block, and self.data_path
+                 stim_lib_path=None):
+        # this sets self.animal_name, self.block_folder, and self.data_path
+        super().__init__(block_folder, data_path=data_path)
+        self.stim_lib_path = get_stim_lib_path(stim_lib_path)
 
         logger.info('AuditoryDataScanner: Using hard-coded subdirectories...')
-        # detect relevant subdirectories for auditory dataset
-        # use default subdirectory name, or override by input
-        # ******* TODO: confirm/standardize subdirectory structure *******
-        self.stim_path = stim_path or os.path.join(self.data_path, 'Stimulus/')
-        self.htk_path = htk_path or os.path.join(self.data_path, 'RatArchive/')
-        self.tdt_path = tdt_path or os.path.join(self.data_path, 'TTankBackup/')
 
     def extract_dataset(self):
-        raw_htk_path = self.__get_raw_htk_path()
-        raw_tdt_path = self.__get_raw_tdt_path()
+        kwargs = {'stim_lib_path': self.stim_lib_path}
+        htk_path = self.__get_htk_path()
+        if htk_path is not None:
+            kwargs['htk_path'] = htk_path
+        tdt_path = self.__get_tdt_path()
+        if tdt_path is not None:
+            kwargs['tdt_path'] = tdt_path
         mark_path = self.__find_mark_track()
-        return Dataset(data_path=self.data_path,
-                       animal_name=self.animal_name,
-                       block=self.block,
-                       raw_htk_path=raw_htk_path,
-                       raw_tdt_path=raw_tdt_path,
-                       mark_path=mark_path,
-                       stim_path=self.stim_path,
-                       )
+        if mark_path is not None:
+            kwargs['mark_path'] = mark_path
+        return Dataset(self.block_folder,
+                       data_path=self.data_path,
+                       **kwargs)
 
     def __find_mark_track(self, mark='mrk11.htk'):
-        return os.path.join(self.add_block_subdir(self.htk_path), mark)
+        path = os.path.join(self.add_block_subdir(self.data_path), mark)
+        if not os.path.exists(path):
+            path = None
+        return path
 
-    def __get_raw_htk_path(self, raw='RawHTK/'):
-        return os.path.join(self.add_block_subdir(self.htk_path), raw)
+    def __get_htk_path(self, raw='RawHTK/'):
+        path = os.path.join(self.add_block_subdir(self.data_path), raw)
+        if not os.path.exists(path):
+            path = None
+        return path
 
-    def __get_raw_tdt_path(self):
-        return self.add_block_subdir(self.tdt_path)
+    def __get_tdt_path(self):
+        path = self.add_block_subdir(self.data_path)
+        if not os.path.exists(path):
+            path = None
+        return path
 
     def add_block_subdir(self, path):
-        return os.path.join(path, self.animal_name,
-                            self.animal_name + '_' + self.block + '/')
+        return os.path.join(path, self.animal_name, self.block_folder)
 
 
 class BehaviorDataScanner(DataScanner):

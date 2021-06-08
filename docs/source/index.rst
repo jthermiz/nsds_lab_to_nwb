@@ -11,6 +11,7 @@ Welcome to nsds_lab_to_nwb's documentation!
    :caption: Contents:
 
    introduction
+   naming_conventions
    installation
    auto_examples/index
    api

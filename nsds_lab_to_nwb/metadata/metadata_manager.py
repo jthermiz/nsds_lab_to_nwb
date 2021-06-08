@@ -1,78 +1,80 @@
 import os
-import io
 import json
 import yaml
 import csv
 import pandas as pd
+from ..utils import (get_metadata_lib_path, get_stim_lib_path,
+                     split_block_folder)
 
 # from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 
-_DEFAULT_EXPERIMENT_TYPE = 'auditory' # for legacy sessions
+
+_DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
 
 
 class MetadataManager:
-    '''Manages metadata for NWB file builder
-    '''
+    """Manages metadata for NWB file builder
 
+    Parameters
+    ----------
+    block_metadata_path : str
+        Path to block metadata file.
+    metadata_lib_path : str
+        Path to metadata library repo.
+    stim_lib_path : str
+        Path to stimulus library.
+    block_folder : str
+        Block specification.
+    """
     def __init__(self,
                  block_metadata_path: str,
-                 library_path: str,
-                 stim_lib_path = None,
-                 block_name = None,
-                 animal_name = None,
-                 use_old_pipeline = None,
+                 metadata_lib_path=None,
+                 stim_lib_path=None,
+                 block_folder=None,
                  ):
         self.block_metadata_path = block_metadata_path
-        self.library_path = library_path
-        self.animal_name = animal_name
-        self.__detect_which_pipeline(use_old_pipeline)
+        self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
+        self.stim_lib_path = get_stim_lib_path(stim_lib_path)
+        self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
+        self.__detect_legacy_block()
 
-        self.read_block_metadata_file(block_name=block_name)
-        if self.animal_name is None:
-            self.animal_name = self.block_name.split('_')[0]
+        self.read_block_metadata_file(block_folder=block_folder)
 
         # paths to metadata/stimulus library
-        self.yaml_lib_path = os.path.join(self.library_path, self.experiment_type, 'yaml/')
+        self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
         # if (stim_lib_path is None) and (self.experiment_type == 'auditory'):
         #     stim_lib_path = os.path.join(self.library_path, self.experiment_type,
         #             'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
-        self.stim_lib_path = stim_lib_path
 
-    def __detect_which_pipeline(self, use_old_pipeline):
-        if (use_old_pipeline is not None) and isinstance(use_old_pipeline, bool):
-            self.use_old_pipeline = use_old_pipeline
-            return
-
+    def __detect_legacy_block(self):
         # detect which pipeline is used, based on metadata format
         _, ext = os.path.splitext(self.block_metadata_path)
         if ext in ('.yaml', '.yml'):
-            self.use_old_pipeline = True
+            self.legacy_block = True
         elif ext == '.csv':
-            self.use_old_pipeline = False
+            self.legacy_block = False
         else:
             raise ValueError('unknown block metadata format')
 
     def read_block_metadata_file(self,
-            block_name=None,
+            block_folder=None,
             default_experiment_type=_DEFAULT_EXPERIMENT_TYPE):
 
-        if self.use_old_pipeline:
+        if self.legacy_block:
             # direct input from the block yaml file (not yet expanded)
             self.block_metadata_input = self.read_yaml(self.block_metadata_path)
         else:
-            block_id = int(block_name.split('_B')[1])
+            block_id = self.block_name[1:]
             self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
-
-        self.block_name = self.block_metadata_input.pop('name', block_name)
 
         # new requirement for nsdslab data: experiment_type
         self.experiment_type = self.block_metadata_input.pop('experiment_type', default_experiment_type)
 
-        if self.use_old_pipeline:
+        if self.legacy_block:
             return
-        self.__extend_experiment_and_device_metadata_new_pipeline()
+        self.__extend_experiment_and_device_metadata()
 
-    def __extend_experiment_and_device_metadata_new_pipeline(self):
+    def __extend_experiment_and_device_metadata(self):
         # this is somewhat ad hoc.
         # new metadata pipeline will be updated in the near future
 
