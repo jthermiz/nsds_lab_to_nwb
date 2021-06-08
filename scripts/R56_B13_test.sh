@@ -1,3 +1,4 @@
+#!/bin/bash
 SAVE_PATH="."
 BLOCK_NAME="R56_B13"
 BLOCK_META=$NSDS_METADATA_PATH/auditory/yaml/block/R56/R56_B13.yaml
