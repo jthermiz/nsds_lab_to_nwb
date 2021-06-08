@@ -13,7 +13,7 @@ class MarkTokenizer():
             self.tokenizer = ToneTokenizer(self.block_name, self.stim_configs)
         elif 'timit' in stim_name:
             self.tokenizer = TIMITTokenizer(self.block_name, self.stim_configs)
-        elif 'wn' in stim_name:
+        elif 'White noise' in stim_name:
             self.tokenizer = WNTokenizer(self.block_name, self.stim_configs)
         else:
             raise ValueError('unknown stimulus type')

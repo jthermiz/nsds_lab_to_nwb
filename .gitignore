@@ -38,4 +38,7 @@ docs/source/gen_modules/*
 
 # various log files 
 *.log
-
+*.nwb
+*.spyproject
+.gitignore
+.vscode
