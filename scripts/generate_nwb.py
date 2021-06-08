@@ -20,8 +20,6 @@ parser.add_argument('--metadata_lib_path', '-m', type=str, default=None,
                     help='Path to the metadata library repo.')
 parser.add_argument('--stim_lib_path', '-s', type=str, default=None,
                     help='Path to the stimulus library.')
-parser.add_argument('--legacy_block', '-l', action='store_true',
-                    help='If included, assumes the data is in the legacy block format.')
 parser.add_argument('--use_htk', '-k', action='store_true',
                     help='Use data from HTK rather than TDT files.')
 
