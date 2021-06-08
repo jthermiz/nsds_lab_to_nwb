@@ -1,0 +1,23 @@
+Recording Information,,,,,,,,,,,,
+Block #,ECoG,Polytrode,Stimulus,ECoG Lateral Ridge (mm),ECoG Posterior Ridge (mm),Polytrode Location AP ,Polytrode Location DV,ECoG Placement,Polytrode Placement,Clean Block,Stimulus Response,Notes
+block_id,device_ecog,device_poly,stim,ecog_lat_loc,ecog_post_loc,poly_ap_loc,poly_dev_loc,ecog_placement,poly_placement,clean_block,stim_response,notes
+01,TRUE,TRUE,White noise,1,1,12,5,1,,TRUE,Good,All channels responsed!
+02,FALSE,FALSE,,,,,,2,,FALSE,,
+03,FALSE,FALSE,,,,,,,,FALSE,,
+04,FALSE,FALSE,,,,,,,,FALSE,,
+05,FALSE,FALSE,,,,,,,,FALSE,,
+06,FALSE,FALSE,,,,,,,,FALSE,,
+07,FALSE,FALSE,,,,,,,,FALSE,,
+08,FALSE,FALSE,,,,,,,,FALSE,,
+09,FALSE,FALSE,,,,,,,,FALSE,,
+10,FALSE,FALSE,,,,,,,,FALSE,,
+11,FALSE,FALSE,,,,,,,,FALSE,,
+12,FALSE,FALSE,,,,,,,,FALSE,,
+13,FALSE,FALSE,,,,,,,,FALSE,,
+14,FALSE,FALSE,,,,,,,,FALSE,,
+15,FALSE,FALSE,,,,,,,,FALSE,,
+16,FALSE,FALSE,,,,,,,,FALSE,,
+17,FALSE,FALSE,,,,,,,,FALSE,,
+18,FALSE,FALSE,,,,,,,,FALSE,,
+19,FALSE,FALSE,,,,,,,,FALSE,,
+20,FALSE,FALSE,,,,,,,,FALSE,,
