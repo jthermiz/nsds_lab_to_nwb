@@ -39,3 +39,6 @@ docs/source/gen_modules/*
 # various log files 
 *.log
 
+# test output
+_test
+

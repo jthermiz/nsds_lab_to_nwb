@@ -4,7 +4,7 @@ import pandas as pd
 from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
 
-from nsds_lab_to_nwb.common.io import read_yaml, csv_to_dict
+from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
 
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
@@ -41,7 +41,8 @@ class MetadataReader:
 
     def read_block_metadata(self):
         # direct input from the block yaml file (not yet expanded)
-        block_id = int(block_folder.split('_B')[1])
+        _, _, block_tag = split_block_folder(self.block_folder)
+        block_id = int(block_tag[1:])   # the integer after the 'B'
         self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
 
         # CAVEAT: keys 'name' and 'experiment_type' should not be expanded
@@ -108,7 +109,8 @@ class MetadataManager:
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
         self.stim_lib_path = get_stim_lib_path(stim_lib_path)
-        self.surgeon_initials, self.animal_name, self.block_folder = split_block_folder(block_folder)
+        self.block_folder = block_folder
+        self.surgeon_initials, self.animal_name, self.block_tag = split_block_folder(block_folder)
         self.__detect_legacy_block()
 
         if self.legacy_block:
@@ -122,9 +124,7 @@ class MetadataManager:
                             library_path=self.metadata_lib_path,
                             block_folder=block_folder)
 
-
-        # self.read_block_metadata_file(block_folder=block_folder)
-        self.block_metadata_input = self.reader.read_block_metadata()
+        self.read_block_metadata()
 
         # new requirement for nsdslab data: experiment_type
         self.experiment_type = self.block_metadata_input.pop('experiment_type', _DEFAULT_EXPERIMENT_TYPE)
@@ -141,6 +141,14 @@ class MetadataManager:
             self.legacy_block = False
         else:
             raise ValueError('unknown block metadata format')
+
+    def read_block_metadata(self, write_yaml_file=True):
+        self.block_metadata_input = self.reader.read_block_metadata()
+
+        if write_yaml_file:
+            # export block_metadata_input for inspection
+            # can set write_yaml_file to False once metadata pipeline is stable
+            write_yaml(f'_test/{self.block_folder}_block_metadata_input.yaml', self.block_metadata_input)
 
     def extract_metadata(self):
         metadata = {}
