@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------
 
 tone150:
-    alt_names: []
+    alt_names: ['NC Tone 150']
     description: ''
     file: 'Tone150/freq_resp_area_stimulus_signal_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.wav'
 
