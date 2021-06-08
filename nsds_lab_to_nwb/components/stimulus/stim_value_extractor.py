@@ -45,10 +45,9 @@ class StimValueExtractor():
 
 def tone_stimulus_values(mat_file_path):
     ''' adapted from mars.configs.block_directory '''
-    sio = h5py.File(mat_file_path, 'r')
-    stim_vals = np.array(sio['stimVls']).astype(int)
+    with h5py.File(mat_file_path, 'r') as sio:
+        stim_vals = sio['stimVls'][:].astype(int)
     stim_vals[0,:] = stim_vals[0,:]+8
-    sio.close()
     return stim_vals
 
 def timit_stimulus_values(csv_file_path):
@@ -64,9 +63,9 @@ def timit_stimulus_values(csv_file_path):
 
 def gen_tone_stim_vals():
     ''' exact copy from mars.configs.block_directory '''
-    frqs = np.array([500, 577, 666, 769, 887, 1024, 1182, 
-        1364, 1575, 1818, 2098, 2421, 2795, 3226, 3723, 
-        4297, 4960, 5725, 6608, 7627, 8803, 10160, 11727, 
+    frqs = np.array([500, 577, 666, 769, 887, 1024, 1182,
+        1364, 1575, 1818, 2098, 2421, 2795, 3226, 3723,
+        4297, 4960, 5725, 6608, 7627, 8803, 10160, 11727,
         13535, 15622, 18031, 20812, 24021, 27725, 32000])
     amps = np.arange(1,9)
     frqset, ampset = np.meshgrid(frqs,amps)

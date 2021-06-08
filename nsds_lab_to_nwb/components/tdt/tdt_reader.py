@@ -15,7 +15,7 @@ class TDTReader():
         self.path = path
         self.channels = channels
         self.verbose = verbose
-        
+
         if channels is None:
             self.tdt_obj = tdt.read_block(path)
         else:
@@ -24,11 +24,11 @@ class TDTReader():
         self.streams = self.get_streams()
         self.block_name = self.tdt_obj['info']['blockname']
         self.start_time = self.tdt_obj['info']['utc_start_time']
-        
+
         if verbose:
             print('Stream list:')
             print(self.streams)
-    
+
     def get_streams(self):
         """Get TDT all stream names
 
@@ -37,7 +37,7 @@ class TDTReader():
         """
         streams = list(self.tdt_obj['streams'].keys())
         return streams
-    
+
     def get_metadata(self, stream):
         """Get specified stream metadata
 
@@ -52,16 +52,17 @@ class TDTReader():
             meta = {}
             meta['sample_rate'] = self.tdt_obj['streams'][stream]['fs']
             meta['channel_ids'] = self.tdt_obj['streams'][stream]['channel']
+            meta['start_time'] = self.tdt_obj['info']['utc_start_time']
             data_shape = self.tdt_obj['streams'][stream]['data'].shape
             if len(data_shape) == 1:
                 meta['num_samples'] = data_shape[0]
                 meta['num_channels'] = 1
             else:
                 meta['num_channels'], meta['num_samples'] = data_shape
-            return meta       
+            return meta
         else:
-            return None 
-    
+            return None
+
     def check_stream(self, stream):
         """Checks to see if user specified stream exists in data
 
@@ -79,7 +80,7 @@ class TDTReader():
                 error_message += stream + ', '
             warnings.warn(error_message)
         return stream_available
-    
+
     def get_data(self, stream):
         """Get specified stream data
 
@@ -87,7 +88,7 @@ class TDTReader():
             stream (string): stream name
 
         Returns:
-            mat, meta (np-array, dict): Returns tuple of data matrix (wide form) 
+            mat, meta (np-array, dict): Returns tuple of data matrix (wide form)
                                         and metadata dictionary (if no stream returns None)
         """
         stream_exisit = self.check_stream(stream)
@@ -106,6 +107,3 @@ class TDTReader():
         """
         events = self.tdt_obj['epocs']['mark']['onset']
         return events
-
-    
-    

@@ -1,15 +1,17 @@
 #!/user/bin/env python
 import logging.config
-import os
 import argparse
+from importlib_resources import files
 
+import nsds_lab_to_nwb
 from nsds_lab_to_nwb.utils import (get_data_path, get_metadata_lib_path,
                                    get_stim_lib_path)
 from nsds_lab_to_nwb.nwb_builder import NWBBuilder
 
 
-PWD = os.path.dirname(os.path.abspath(__file__))
-logging.config.fileConfig(fname=str(PWD) + '/../nsds_lab_to_nwb/logging.conf', disable_existing_loggers=False)
+fname = files(nsds_lab_to_nwb).joinpath('logging.conf')
+print(fname)
+logging.config.fileConfig(fname, disable_existing_loggers=False)
 
 parser = argparse.ArgumentParser(description='Convert to a NWB file.')
 parser.add_argument('save_path', type=str, help='Path to save the NWB file.')

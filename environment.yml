@@ -21,9 +21,10 @@ dependencies:
   - pynwb
   - pyyaml
   - imageio
+  - importlib_resources
 
   - pip:
     - tdt
     - sphinx-rtd-theme
     - sphinx-gallery
-    - -rrequirements.txt
+    - requirements.txt

@@ -1,22 +1,27 @@
 from pynwb import TimeSeries
 
 from nsds_lab_to_nwb.components.htk.htk_reader import HtkReader
+from nsds_lab_to_nwb.components.tdt.tdt_reader import TDTReader
 
 
 class MarkManager():
-    def __init__(self, mark_path):
-        self.mark_path = mark_path
-
+    def __init__(self, dataset):
+        self.dataset = dataset
 
     def get_mark_track(self, name='recorded_mark'):
         # Read the mark track
-        mark_track, rate = HtkReader.read_htk(self.mark_path)
+        if hasattr(self.dataset, 'htk_mark_path'):
+            mark_path = self.dataset.htk_mark_path
+            mark_track, rate = HtkReader.read_htk(mark_path)
+        else:
+            mark_track, meta = TDTReader(self.dataset.tdt_path).get_data('mrk1')
+            rate = meta['sample_rate']
 
         # Create the mark timeseries
         mark_time_series = TimeSeries(name=name,
-                            data=mark_track,
-                            unit='Volts',
-                            starting_time=0.0,
-                            rate=rate,
-                            description='The neural recording aligned stimulus mark track.')
+                                      data=mark_track,
+                                      unit='Volt',
+                                      starting_time=0.0,
+                                      rate=rate,
+                                      description='The stimulus mark track.')
         return mark_time_series
