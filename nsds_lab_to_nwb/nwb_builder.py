@@ -27,8 +27,8 @@ logger.setLevel(logging.INFO)
 
 LOCAL_TIMEZONE = pytz.timezone('US/Pacific')
 
-#TODO: GET ACCURATE START TIME
-_DEFAULT_SESSION_START_TIME = datetime.fromtimestamp(0, tz=LOCAL_TIMEZONE) # dummy value for now
+# TODO: GET ACCURATE START TIME
+_DEFAULT_SESSION_START_TIME = datetime.fromtimestamp(0, tz=LOCAL_TIMEZONE)
 
 
 class NWBBuilder:
@@ -63,7 +63,7 @@ class NWBBuilder:
             metadata_lib_path: str = '',
             stim_lib_path: str = '',
             session_start_time=_DEFAULT_SESSION_START_TIME,
-            use_htk = False
+            use_htk=False
     ):
         self.data_path = get_data_path(data_path)
         self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
@@ -97,22 +97,20 @@ class NWBBuilder:
         self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata, use_htk=self.use_htk)
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
 
-    def _collect_nwb_metadata(self, block_metadata_path,
-                                    metadata_lib_path,
-                                    stim_lib_path):
+    def _collect_nwb_metadata(self, block_metadata_path, metadata_lib_path, stim_lib_path):
         # collect metadata for NWB conversion
         self.metadata_manager = MetadataManager(
-                            block_folder=self.block_folder, # required for new pipeline
-                            block_metadata_path=block_metadata_path,
-                            metadata_lib_path=metadata_lib_path,
-                            stim_lib_path=stim_lib_path
-                            )
+            block_folder=self.block_folder,
+            block_metadata_path=block_metadata_path,
+            metadata_lib_path=metadata_lib_path,
+            stim_lib_path=stim_lib_path)
         return self.metadata_manager.extract_metadata()
 
     def _collect_dataset_paths(self):
         # scan data_path and identify relevant subdirectories
         if self.experiment_type == 'auditory':
-            data_scanner = AuditoryDataScanner(self.block_folder, data_path=self.data_path)
+            data_scanner = AuditoryDataScanner(self.block_folder, data_path=self.data_path,
+                                               stim_lib_path=self.stim_lib_path)
         elif self.experiment_type == 'behavior':
             raise ValueError('behavior data not yet supported.')
         else:
@@ -138,13 +136,13 @@ class NWBBuilder:
 
         block_name = self.metadata['block_name']
         nwb_content = NWBFile(
-            session_description=self.metadata['session_description'], # 'foo',
+            session_description=self.metadata['session_description'],
             experimenter=self.metadata['experimenter'],
             lab=self.metadata['lab'],
             institution=self.metadata['institution'],
-            session_start_time = self.session_start_time,
+            session_start_time=self.session_start_time,
             file_create_date=current_time,
-            identifier=str(uuid.uuid1()), # block_name,
+            identifier=str(uuid.uuid1()),
             session_id=block_name,
             experiment_description=self.metadata['experiment_description'],
             subject=Subject(

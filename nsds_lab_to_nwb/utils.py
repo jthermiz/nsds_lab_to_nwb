@@ -1,7 +1,7 @@
 import os
 
 
-error_string = ("{} not set. Add 'export {}=/mypath/folder' "
+error_string = ("{} not set. Add 'export {}=/mypath/folder'"
                 " to your .bashrc file or equivalent.")
 
 

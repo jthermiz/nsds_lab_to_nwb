@@ -1,3 +1,4 @@
+#!/user/bin/env python
 import logging.config
 import os
 import argparse
