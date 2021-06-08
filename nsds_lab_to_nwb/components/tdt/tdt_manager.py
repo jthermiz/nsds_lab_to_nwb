@@ -46,6 +46,7 @@ class TdtManager():
         data, tdt_params = result[0], result[1]
         data = data.T #tranpose to long form matrix
         rate = tdt_params['sample_rate']
+        start_time = tdt_params['start_time']
 
         # Create the electrical series
         e_series = ElectricalSeries(name=device_name,
