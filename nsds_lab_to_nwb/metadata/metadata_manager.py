@@ -15,11 +15,11 @@ class LegacyMetadataReader:
     def __init__(self,
                 block_metadata_path: str,
                 library_path: str,
-                block_name: str,
+                block_folder: str,
                 ):
         self.block_metadata_path = block_metadata_path
         self.library_path = library_path
-        self.block_name = block_name
+        self.block_folder = block_folder
 
     def read_block_metadata(self):
         # direct input from the block yaml file (not yet expanded)
@@ -33,15 +33,15 @@ class MetadataReader:
     def __init__(self,
                 block_metadata_path: str,
                 library_path: str,
-                block_name: str,
+                block_folder: str,
                 ):
         self.block_metadata_path = block_metadata_path
         self.library_path = library_path
-        self.block_name = block_name
+        self.block_folder = block_folder
 
     def read_block_metadata(self):
         # direct input from the block yaml file (not yet expanded)
-        block_id = int(block_name.split('_B')[1])
+        block_id = int(block_folder.split('_B')[1])
         self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
 
         # CAVEAT: keys 'name' and 'experiment_type' should not be expanded
@@ -108,10 +108,10 @@ class MetadataManager:
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
         self.stim_lib_path = get_stim_lib_path(stim_lib_path)
-        self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
+        self.surgeon_initials, self.animal_name, self.block_folder = split_block_folder(block_folder)
         self.__detect_legacy_block()
 
-        if self.use_old_pipeline:
+        if self.legacy_block:
             self.reader = LegacyMetadataReader(
                             block_metadata_path=self.block_metadata_path,
                             library_path=self.metadata_lib_path,
@@ -123,13 +123,14 @@ class MetadataManager:
                             block_folder=block_folder)
 
 
-        self.read_block_metadata_file(block_folder=block_folder)
+        # self.read_block_metadata_file(block_folder=block_folder)
+        self.block_metadata_input = self.reader.read_block_metadata()
+
+        # new requirement for nsdslab data: experiment_type
+        self.experiment_type = self.block_metadata_input.pop('experiment_type', _DEFAULT_EXPERIMENT_TYPE)
 
         # paths to metadata/stimulus library
         self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
-        # if (stim_lib_path is None) and (self.experiment_type == 'auditory'):
-        #     stim_lib_path = os.path.join(self.library_path, self.experiment_type,
-        #             'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
 
     def __detect_legacy_block(self):
         # detect which pipeline is used, based on metadata format
@@ -141,18 +142,9 @@ class MetadataManager:
         else:
             raise ValueError('unknown block metadata format')
 
-    def read_block_metadata_file(self,
-            block_folder=None,
-            default_experiment_type=_DEFAULT_EXPERIMENT_TYPE):
-
-        self.block_metadata_input = self.reader.read_block_metadata()
-
-        # new requirement for nsdslab data: experiment_type
-        self.experiment_type = self.block_metadata_input.pop('experiment_type', default_experiment_type)
-
     def extract_metadata(self):
         metadata = {}
-        metadata['block_name'] = self.block_name
+        metadata['block_name'] = self.block_folder
         metadata['experiment_type'] = self.experiment_type
 
         # # expand metadata parts by extracting from library
@@ -185,7 +177,7 @@ class MetadataManager:
 
     def extract_metadata_old(self):
         metadata = {}
-        metadata['block_name'] = self.block_name
+        metadata['block_name'] = self.block_folder
         metadata['experiment_type'] = self.experiment_type
 
         # expand metadata parts by extracting from library
