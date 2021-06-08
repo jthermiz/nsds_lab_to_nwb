@@ -30,9 +30,9 @@ class TdtManager():
             result = self.tdt_reader.get_data(device_name)
         else:
             logger.info('- stream {} not found. Available stream list: {}'.format(device_name, stream_list))
-            results = None
+            result = None
             # try alternative (device, stream) name pairs
-            alternative_device_names = [('ECoG', 'Wave')]
+            alternative_device_names = [('Poly', 'Wave')]
             for dev_name, stream_name in alternative_device_names:
                 if device_name == dev_name:
                     result = self.tdt_reader.get_data(stream_name)
@@ -46,7 +46,6 @@ class TdtManager():
         data, tdt_params = result[0], result[1]
         data = data.T #tranpose to long form matrix
         rate = tdt_params['sample_rate']
-        start_time = tdt_params['start_time']
 
         # Create the electrical series
         e_series = ElectricalSeries(name=device_name,
@@ -55,4 +54,5 @@ class TdtManager():
                                     starting_time=0.,
                                     rate=rate,
                                     )
+        
         return e_series
