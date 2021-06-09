@@ -10,6 +10,7 @@ from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'
 _WRITE_YAML_FILE = True     # export intermediate yaml files for metadata inspection
+                            # turn off when testing is over
 
 logger = logging.getLogger(__name__)
 
