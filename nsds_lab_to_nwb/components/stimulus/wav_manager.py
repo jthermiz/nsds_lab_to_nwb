@@ -47,13 +47,13 @@ class WavManager():
         if stim_name in stim_directory.keys():
             # if there is a matching key, just read the corresponding entry
             stim_info = stim_directory[stim_name]
-            return os.path.join(stim_path, stim_info['file'])
+            return os.path.join(stim_path, stim_info['audio_path'])
 
         # if stim_name does not match any key, try the alternative names
         for key, stim_info in stim_directory.items():
             for alt_name in stim_info['alt_names']:
                 if stim_name == alt_name:
-                    return os.path.join(stim_path, stim_info['file'])
+                    return os.path.join(stim_path, stim_info['audio_path'])
 
         raise ValueError('cannot find stimulus in list_of_stimuli.yaml')
 
