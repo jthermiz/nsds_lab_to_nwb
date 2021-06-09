@@ -3,6 +3,7 @@ from scipy.io import wavfile
 
 from pynwb import TimeSeries
 
+from nsds_lab_to_nwb.common.io import read_yaml
 from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 
 
@@ -41,22 +42,20 @@ class WavManager():
 
     @staticmethod
     def get_stim_file(stim_name, stim_path):
-        if stim_name == 'tone150':
-            return os.path.join(stim_path,
-                'Tone150/freq_resp_area_stimulus_signal_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.wav')
-        if stim_name == 'timit':
-            return os.path.join(stim_path,
-                'TIMIT/timit998s.wav')
-        if stim_name == 'tone':
-            return os.path.join(stim_path,
-                'Tone/stimulus_signal_03202013.wav')
-        if stim_name == 'wn2':
-            return os.path.join(stim_path,
-                'WN/tb_noise_burst_stim_fs96kHz_signal.wav')
-        if stim_name == 'dmr':
-            return os.path.join(stim_path,
-                'DMR/dmr-500flo-40000fhi-4SM-40TM-40db-96khz-48DF-15min.wav')
-        raise ValueError('unknown stimulus')
+        stim_directory = read_yaml('../../_data/list_of_stimuli.yaml')
+
+        if stim_name in stim_directory.keys():
+            # if there is a matching key, just read the corresponding entry
+            stim_info = stim_directory[stim_name]
+            return os.path.join(stim_path, stim_info['file'])
+
+        # if stim_name does not match any key, try the alternative names
+        for key, stim_info in stim_directory.items():
+            for alt_name in stim_info['alt_names']:
+                if stim_name == alt_name:
+                    return os.path.join(stim_path, stim_info['file'])
+
+        raise ValueError('cannot find stimulus in list_of_stimuli.yaml')
 
     def __load_stim_values(self, stimulus_metadata):
         '''load stim_values from .mat or .csv files,
