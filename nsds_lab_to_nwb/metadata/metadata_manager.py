@@ -1,3 +1,4 @@
+import logging
 import os
 import csv
 import pandas as pd
@@ -8,6 +9,9 @@ from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
 
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
+
+logger = logging.getLogger(__name__)
+
 
 class LegacyMetadataReader:
     ''' Reads metadata input for old experiments.
@@ -24,7 +28,26 @@ class LegacyMetadataReader:
     def read_block_metadata(self):
         # direct input from the block yaml file (not yet expanded)
         self.block_metadata_input = read_yaml(self.block_metadata_path)
+        self.process_block_metadata()
         return self.block_metadata_input
+
+    def process_block_metadata(self):
+        # unpack legacy metadata fields
+        self.yaml_lib_path = os.path.join(self.library_path, 'auditory', 'yaml/') # legacy datasets are auditory
+        self.load_from_library(key='experiment')
+        self.block_metadata_input['experiment'].pop('name', None)
+        self.load_from_library(key='device')
+        self.load_from_library(key='stimulus')
+
+    def load_from_library(self, key):
+        filename = self.block_metadata_input[key]
+        if isinstance(filename, str):
+            logger.info(f'expanding {key} from key...')
+            ref_data = read_yaml(os.path.join(
+                            self.yaml_lib_path, key, filename + '.yaml'))
+        else:
+            raise TypeError(f'Value of {key} should be a filename string')
+        self.block_metadata_input[key] = ref_data
 
 
 class MetadataReader:
@@ -45,8 +68,7 @@ class MetadataReader:
         block_id = int(block_tag[1:])   # the integer after the 'B'
         self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
 
-        # CAVEAT: keys 'name' and 'experiment_type' should not be expanded
-        self.__extend_experiment_and_device_metadata_new_pipeline()
+        self.process_block_metadata()
         return self.block_metadata_input
 
     @staticmethod
@@ -56,9 +78,12 @@ class MetadataReader:
         blk_dict = blk_row.to_dict(orient='records')[0] # a dict
         return blk_dict
 
-    def __extend_experiment_and_device_metadata_new_pipeline(self):
+    def process_block_metadata(self):
+        # extend experiment and device metadata
         # this is somewhat ad hoc.
         # new metadata pipeline will be updated in the near future
+
+        # CAVEAT: keys 'name' and 'experiment_type' should not be expanded
 
         # unpack experiment
         experiment_metadata_path = os.path.join(
@@ -155,18 +180,18 @@ class MetadataManager:
         metadata['block_name'] = self.block_folder
         metadata['experiment_type'] = self.experiment_type
 
-        # # expand metadata parts by extracting from library
+        # expand metadata parts, with some field-specific treatments
         for key, value in self.block_metadata_input.items():
             if key == 'experiment':
-                self.expand_experiment(metadata, value)
+                self._extract_experiment(metadata, value)
                 continue
             if key == 'device':
-                self.expand_device(metadata, value)
+                self._extract_device(metadata, value)
                 continue
             if key == 'stimulus':
                 if self.experiment_type != 'auditory':
                     raise ValueError('experiment type mismatch')
-                self.expand_stimulus(metadata, value)
+                self._extract_stimulus(metadata, value)
                 continue
             metadata[key] = value
 
@@ -183,66 +208,23 @@ class MetadataManager:
             metadata['session_description'] = metadata['experiment_description']
         return metadata
 
-    def extract_metadata_old(self):
-        metadata = {}
-        metadata['block_name'] = self.block_folder
-        metadata['experiment_type'] = self.experiment_type
-
-        # expand metadata parts by extracting from library
-        for key, value in self.block_metadata_input.items():
-            if key == 'experiment':
-                self.expand_experiment(metadata, value)
-                continue
-            if key == 'device':
-                self.expand_device(metadata, value)
-                continue
-            if key == 'stimulus':
-                if self.experiment_type != 'auditory':
-                    raise ValueError('experiment type mismatch')
-                self.expand_stimulus(metadata, value)
-                continue
-            # else:
-            metadata[key] = value
-
-        # set experiment description
-        if self.experiment_type == 'auditory':
-            metadata['experiment_description'] = metadata['stimulus']['name'] + ' Stimulus Experiment'
-        elif self.experiment_type == 'behavior':
-            metadata['experiment_description'] = 'Reaching Experiment' # <<<< any additional specification?
-        else:
-            metadata['experiment_description'] = 'Unknown'
-
-        # set session description, if not already existing
-        if not metadata['session_description']:
-            metadata['session_description'] = metadata['experiment_description']
-        return metadata
-
-    def expand_experiment(self, metadata, filename, key='experiment'):
-        if isinstance(filename, str):
-            ref_data = read_yaml(os.path.join(
-                            self.yaml_lib_path, key, filename + '.yaml'))
-        elif isinstance(filename, dict):
-            ref_data = filename
+    def _extract_experiment(self, metadata, ref_data, key='experiment'):
+        if not isinstance(ref_data, dict):
+            raise TypeError(f'Need a dict under key {key} - check MetadataReader')
         ref_data.pop('name', None)
         metadata.update(ref_data)  # add to top level
         self.__check_subject(metadata)
 
-    def expand_device(self, metadata, filename, key='device'):
-        if isinstance(filename, str):
-            ref_data = read_yaml(os.path.join(
-                            self.yaml_lib_path, key, filename + '.yaml'))
-        elif isinstance(filename, dict):
-            ref_data = filename
+    def _extract_device(self, metadata, ref_data, key='device'):
+        if not isinstance(ref_data, dict):
+            raise TypeError(f'Need a dict under key {key} - check MetadataReader')
+        ref_data.pop('name', None)
         self.__load_probes(ref_data)
         metadata[key] = ref_data
 
-    def expand_stimulus(self, metadata, filename, key='stimulus'):
-        if isinstance(filename, str):
-            ref_data = read_yaml(os.path.join(
-                            self.yaml_lib_path, key, filename + '.yaml'))
-        elif isinstance(filename, dict):
-            ref_data = filename
-
+    def _extract_stimulus(self, metadata, ref_data, key='stimulus'):
+        if not isinstance(ref_data, dict):
+            raise TypeError(f'Need a dict under key {key} - check MetadataReader')
         ref_data['stim_lib_path'] = self.stim_lib_path # pass stim library path (ad hoc)
         metadata[key] = ref_data
 
