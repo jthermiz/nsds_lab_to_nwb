@@ -22,20 +22,22 @@ class MetadataReader:
                 block_metadata_path: str,
                 library_path: str,
                 block_folder: str,
+                metadata_save_path=None,
                 ):
         self.block_metadata_path = block_metadata_path
         self.library_path = library_path
         self.block_folder = block_folder
+        self.metadata_save_path = metadata_save_path
 
-    def read(self, write_yaml_file=_WRITE_YAML_FILE):
+    def read(self):
         self.metadata_input = self.load_metadata_source()
-        if write_yaml_file:
-            write_yaml(f'_test/{self.block_folder}_metadata_input.yaml',
+        if self.metadata_save_path is not None:
+            write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_input.yaml',
                        self.metadata_input)
 
         self.extra_cleanup()
-        if write_yaml_file:
-            write_yaml(f'_test/{self.block_folder}_metadata_input_clean.yaml',
+        if self.metadata_save_path is not None:
+            write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_input_clean.yaml',
                        self.metadata_input)
 
         return self.metadata_input
@@ -94,8 +96,10 @@ class LegacyMetadataReader(MetadataReader):
                 block_metadata_path: str,
                 library_path: str,
                 block_folder: str,
+                metadata_save_path=None,
                 ):
-        MetadataReader.__init__(self, block_metadata_path, library_path, block_folder)
+        MetadataReader.__init__(self, block_metadata_path, library_path,
+                                      block_folder, metadata_save_path)
 
     def load_metadata_source(self):
         # direct input from the block yaml file (not yet expanded)
@@ -136,12 +140,16 @@ class MetadataManager:
         Path to stimulus library.
     block_folder : str
         Block specification.
+    metadata_save_path : str (optional)
+        Path to a directory where parsed metadata file(s) will be saved.
+        Files are saved only if metadata_save_path is provided.
     """
     def __init__(self,
                  block_metadata_path: str,
                  metadata_lib_path=None,
                  stim_lib_path=None,
                  block_folder=None,
+                 metadata_save_path=None,
                  experiment_type=_DEFAULT_EXPERIMENT_TYPE,
                  ):
         self.block_metadata_path = block_metadata_path
@@ -149,6 +157,7 @@ class MetadataManager:
         self.stim_lib_path = get_stim_lib_path(stim_lib_path)
         self.block_folder = block_folder
         self.surgeon_initials, self.animal_name, self.block_tag = split_block_folder(block_folder)
+        self.metadata_save_path = metadata_save_path
         self.experiment_type = experiment_type
         self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
         self.__detect_legacy_block()
@@ -157,12 +166,14 @@ class MetadataManager:
             self.metadata_reader = LegacyMetadataReader(
                             block_metadata_path=self.block_metadata_path,
                             library_path=self.metadata_lib_path,
-                            block_folder=block_folder)
+                            block_folder=self.block_folder,
+                            metadata_save_path=self.metadata_save_path)
         else:
             self.metadata_reader = MetadataReader(
                             block_metadata_path=self.block_metadata_path,
                             library_path=self.metadata_lib_path,
-                            block_folder=block_folder)
+                            block_folder=self.block_folder,
+                            metadata_save_path=self.metadata_save_path)
 
     def __detect_legacy_block(self):
         # detect which pipeline is used, based on metadata format
@@ -174,7 +185,7 @@ class MetadataManager:
         else:
             raise ValueError('unknown block metadata format')
 
-    def extract_metadata(self, write_yaml_file=_WRITE_YAML_FILE):
+    def extract_metadata(self):
         metadata_input = self.metadata_reader.read()
         # metadata_input should have only the following top-level keys
         # ('block', 'experiment', 'device', 'stimulus') and optionally 'name'
@@ -188,8 +199,8 @@ class MetadataManager:
         if 'session_description' not in metadata:
             metadata['session_description'] = metadata['experiment_description']
 
-        if write_yaml_file:
-            write_yaml(f'_test/{self.block_folder}_metadata_full.yaml',
+        if self.metadata_save_path is not None:
+            write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_full.yaml',
                        metadata)
 
         return metadata
