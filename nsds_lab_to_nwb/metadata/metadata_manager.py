@@ -160,6 +160,9 @@ class MetadataManager:
         self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
         self.__detect_legacy_block()
 
+        if self.metadata_save_path is not None:
+            os.makedirs(self.metadata_save_path, exist_ok=True)
+
         if self.legacy_block:
             self.metadata_reader = LegacyMetadataReader(
                             block_metadata_path=self.block_metadata_path,
