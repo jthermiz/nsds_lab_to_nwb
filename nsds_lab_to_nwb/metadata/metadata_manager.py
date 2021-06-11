@@ -34,6 +34,7 @@ class MetadataReader:
             write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_input.yaml',
                        self.metadata_input)
 
+        self.parse()
         self.extra_cleanup()
         if self.metadata_save_path is not None:
             write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_input_clean.yaml',
@@ -65,10 +66,6 @@ class MetadataReader:
         metadata_input['experiment'] = experiment_metadata_input
         return metadata_input
 
-    def extra_cleanup(self):
-        # self.parse_old()
-        self.parse()
-
     def parse(self):
         self.metadata_input = apply_keymap(self.metadata_input.copy(),
                                            keymap_file='metadata_keymap')
@@ -96,6 +93,9 @@ class MetadataReader:
                 device_metadata[key] = value
         return device_metadata
 
+    def extra_cleanup(self):
+        self.metadata_input.pop('block_id', None)
+
     @staticmethod
     def read_csv_row(file_path, block_id):
         all_blocks = pd.read_csv(file_path)
@@ -116,26 +116,27 @@ class LegacyMetadataReader(MetadataReader):
         MetadataReader.__init__(self, block_metadata_path, library_path,
                                       block_folder, metadata_save_path)
 
+        # TODO: separate (experiment, device) metadata library as legacy
+        self.legacy_lib_path = os.path.join(self.library_path, 'auditory', 'yaml/') # legacy datasets are auditory
+
+
     def load_metadata_source(self):
         # direct input from the block yaml file (not yet expanded)
         metadata_input = read_yaml(self.block_metadata_path)
-
-        # TODO: separate (experiment, device) metadata library as legacy
-        yaml_lib_path = os.path.join(self.library_path, 'auditory', 'yaml/') # legacy datasets are auditory
 
         # load from metadata library (legacy structure)
         for key in ('experiment', 'device', 'stimulus'):
             logger.info(f'expanding {key} from legacy metadata library...')
             filename = metadata_input[key]
             metadata_input[key] = read_yaml(
-                os.path.join(yaml_lib_path, key, filename + '.yaml'))
-
-        # collect other block metadata
-        metadata_input['block'] = {}
-        for key in ('poly_neighbors', 'bad_chs'):
-            metadata_input['block'][key] = metadata_input.pop(key)
-
+                os.path.join(self.legacy_lib_path, key, filename + '.yaml'))
         return metadata_input
+
+    def parse(self):
+        # collect other block metadata
+        self.metadata_input['block'] = {}
+        for key in ('poly_neighbors', 'bad_chs'):
+            self.metadata_input['block'][key] = self.metadata_input.pop(key)
 
     def extra_cleanup(self):
         self.metadata_input['experiment'].pop('name', None)
