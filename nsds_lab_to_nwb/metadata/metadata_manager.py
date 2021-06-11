@@ -306,7 +306,7 @@ class MetadataManager:
                 metadata['subject'][key] = 'Unknown'
 
     def __load_stimulus_info(self, stimulus_metadata):
-        stim_name = check_stimulus_name(stimulus_metadata['name'])
+        stim_name, _ = check_stimulus_name(stimulus_metadata['name'])
         if stim_name != stimulus_metadata['name']:
             stimulus_metadata['alt_name'] = stimulus_metadata['name']
         stim_yaml_path = os.path.join(self.yaml_lib_path, 'stimulus', stim_name + '.yaml')

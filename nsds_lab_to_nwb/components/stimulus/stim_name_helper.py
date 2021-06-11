@@ -9,9 +9,9 @@ def check_stimulus_name(stim_name_input):
 
     if stim_name_input in stim_directory.keys():
         # if there is a matching key, just read the corresponding entry
-        return stim_name_input
+        return stim_name_input, stim_directory[stim_name_input]
     # if stim_name does not match any key, try the alternative names
     for key, stim_info in stim_directory.items():
         for alt_name in stim_info['alt_names']:
             if stim_name_input == alt_name:
-                return key
+                return key, stim_info
