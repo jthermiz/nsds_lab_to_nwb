@@ -1,3 +1,4 @@
+import importlib.resources
 import os
 from scipy.io import wavfile
 
@@ -5,8 +6,6 @@ from pynwb import TimeSeries
 
 from nsds_lab_to_nwb.common.io import read_yaml
 from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
-
-PWD = os.path.dirname(os.path.abspath(__file__))
 
 
 class WavManager():
@@ -44,7 +43,8 @@ class WavManager():
 
     @staticmethod
     def get_stim_file(stim_name, stim_path):
-        stim_directory = read_yaml(str(PWD) + '/../../_data/list_of_stimuli.yaml')
+        with importlib.resources.path('nsds_lab_to_nwb._data', 'list_of_stimuli.yaml') as data_path:
+            stim_directory = read_yaml(data_path)
 
         if stim_name in stim_directory.keys():
             # if there is a matching key, just read the corresponding entry
