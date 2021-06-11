@@ -31,17 +31,17 @@ keymap:
 
 - name: procedure_date
   comes_from: experiment_metadata
-  mapto: experiment.meta.
+  mapto: experiment_meta.
   description: ''
 
 - name: procedure_time
   comes_from: experiment_metadata
-  mapto: experiment.meta.
+  mapto: experiment_meta.
   description: ''
 
 - name: animal_number
   comes_from: experiment_metadata
-  mapto: experiment.meta.
+  mapto: experiment_meta.
   description: ''
 
 - name: animal_name
@@ -86,12 +86,12 @@ keymap:
 
 - name: surgery_outcome
   comes_from: experiment_metadata
-  mapto: experiment.meta.
+  mapto: experiment_meta.
   description: ''
 
-- name: surgery_note
+- name: surgery_notes
   comes_from: experiment_metadata
-  mapto: experiment.meta.
+  mapto: experiment_meta.
   description: ''
 
 - name: experiment_description
@@ -136,12 +136,17 @@ keymap:
 
 - name: ecog
   comes_from: block_metadata
-  mapto: block.has_ecog
+  mapto: block_meta.has_ecog
   description: ''
 
 - name: poly
   comes_from: block_metadata
-  mapto: block.has_poly
+  mapto: block_meta.has_poly
+  description: ''
+
+- name: stimulus
+  comes_from: block_metadata
+  mapto: stimulus.name
   description: ''
 
 - name: session_description
@@ -171,12 +176,12 @@ keymap:
 
 - name: clean_block
   comes_from: block_metadata
-  mapto: block.is_clean_block
+  mapto: block_meta.is_clean_block
   description: ''
 
 - name: stim_response
   comes_from: block_metadata
-  mapto: block.
+  mapto: block_meta.
   description: ''
 
 - name: notes
