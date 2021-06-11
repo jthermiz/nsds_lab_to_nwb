@@ -6,6 +6,7 @@ from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
 
 from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
+from nsds_lab_to_nwb.components.stimulus.stim_name_helper import check_stimulus_name
 from nsds_lab_to_nwb.metadata.keymap_helper import apply_keymap
 
 
@@ -119,22 +120,26 @@ class LegacyMetadataReader(MetadataReader):
         # TODO: separate (experiment, device) metadata library as legacy
         self.legacy_lib_path = os.path.join(self.library_path, 'auditory', 'yaml/') # legacy datasets are auditory
 
-
     def load_metadata_source(self):
         # direct input from the block yaml file (not yet expanded)
         metadata_input = read_yaml(self.block_metadata_path)
 
         # load from metadata library (legacy structure)
-        for key in ('experiment', 'device', 'stimulus'):
+        for key in ('experiment', 'device'):
             logger.info(f'expanding {key} from legacy metadata library...')
             filename = metadata_input[key]
-            metadata_input[key] = read_yaml(
+            ref_data = read_yaml(
                 os.path.join(self.legacy_lib_path, key, filename + '.yaml'))
+            metadata_input[key] = ref_data
         return metadata_input
 
     def parse(self):
+        # separate stimulus metadata
+        if 'stimulus' in self.metadata_input:
+            self.metadata_input['stimulus'] = {'name': self.metadata_input.pop('stimulus')}
+
         # collect other block metadata
-        self.metadata_input['block'] = {}
+        self.metadata_input['block_meta'] = {}
         for key in ('poly_neighbors', 'bad_chs'):
             self.metadata_input['block'][key] = self.metadata_input.pop(key)
 
@@ -272,8 +277,9 @@ class MetadataManager:
                 metadata['subject'][key] = 'Unknown'
 
     def __load_stimulus_info(self, stimulus_metadata):
-        # stimulus_metadata['stim_lib_path'] = self.stim_lib_path
-        pass
+        stim_name = check_stimulus_name(stimulus_metadata['name'])
+        stim_yaml_path = os.path.join(self.yaml_lib_path, 'stimulus', stim_name + '.yaml')
+        stimulus_metadata.update(read_yaml(stim_yaml_path))
 
     def __load_probes(self, device_metadata):
         for key, value in device_metadata.items():
