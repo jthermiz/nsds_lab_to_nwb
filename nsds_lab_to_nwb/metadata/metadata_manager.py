@@ -151,6 +151,12 @@ class MetadataManager:
     metadata_save_path : str (optional)
         Path to a directory where parsed metadata file(s) will be saved.
         Files are saved only if metadata_save_path is provided.
+    experiment_type : str (optional)
+        Experiment type within the NSDS Lab: 'auditory' (default) or 'behavior'.
+    legacy_block : bool (optional)
+        Indicates whether this is a legacy block.
+        If not provided, auto-detect by the metadata file extension (CAVEAT: no longer accurate)
+
     """
     def __init__(self,
                  block_metadata_path: str,
@@ -263,6 +269,8 @@ class MetadataManager:
 
     def __load_stimulus_info(self, stimulus_metadata):
         stim_name = check_stimulus_name(stimulus_metadata['name'])
+        if stim_name != stimulus_metadata['name']:
+            stimulus_metadata['alt_name'] = stimulus_metadata['name']
         stim_yaml_path = os.path.join(self.yaml_lib_path, 'stimulus', stim_name + '.yaml')
         stimulus_metadata.update(read_yaml(stim_yaml_path))
 
