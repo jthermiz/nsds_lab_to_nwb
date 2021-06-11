@@ -46,32 +46,32 @@ keymap:
 
 - name: animal_name
   comes_from: experiment_metadata
-  mapto: experiment.subject.subject_id
+  mapto: subject.subject_id
   description: ''
 
 - name: sex
   comes_from: experiment_metadata
-  mapto: experiment.subject.
+  mapto: subject.
   description: ''
 
 - name: species
   comes_from: experiment_metadata
-  mapto: experiment.subject.
+  mapto: subject.
   description: ''
 
 - name: genotype
   comes_from: experiment_metadata
-  mapto: experiment.subject.
+  mapto: subject.
   description: ''
 
 - name: animal_description
   comes_from: experiment_metadata
-  mapto: experiment.subject.description
+  mapto: subject.description
   description: ''
 
 - name: weight
   comes_from: experiment_metadata
-  mapto: experiment.subject.
+  mapto: subject.
   description: ''
 
 - name: pharmacology

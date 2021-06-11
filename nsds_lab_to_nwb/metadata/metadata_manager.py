@@ -117,8 +117,10 @@ class LegacyMetadataReader(MetadataReader):
         MetadataReader.__init__(self, block_metadata_path, library_path,
                                       block_folder, metadata_save_path)
 
+        self.experiment_type = 'auditory'   # for legacy auditory datasets
+
         # TODO: separate (experiment, device) metadata library as legacy
-        self.legacy_lib_path = os.path.join(self.library_path, 'auditory', 'yaml/') # legacy datasets are auditory
+        self.legacy_lib_path = os.path.join(self.library_path, self.experiment_type, 'yaml/')
 
     def load_metadata_source(self):
         # direct input from the block yaml file (not yet expanded)
@@ -127,13 +129,18 @@ class LegacyMetadataReader(MetadataReader):
         # load from metadata library (legacy structure)
         for key in ('experiment', 'device'):
             logger.info(f'expanding {key} from legacy metadata library...')
-            filename = metadata_input[key]
+            filename = metadata_input.pop(key)
             ref_data = read_yaml(
                 os.path.join(self.legacy_lib_path, key, filename + '.yaml'))
-            metadata_input[key] = ref_data
+            ref_data.pop('name', None)
+            metadata_input.update(ref_data)
         return metadata_input
 
     def parse(self):
+        self.metadata_input = apply_keymap(self.metadata_input.copy(),
+                                           keymap_file='metadata_keymap_legacy')
+
+    def parse_old(self):
         # separate stimulus metadata
         if 'stimulus' in self.metadata_input:
             self.metadata_input['stimulus'] = {'name': self.metadata_input.pop('stimulus')}
@@ -144,8 +151,19 @@ class LegacyMetadataReader(MetadataReader):
             self.metadata_input['block'][key] = self.metadata_input.pop(key)
 
     def extra_cleanup(self):
-        self.metadata_input['experiment'].pop('name', None)
-        self.metadata_input['device'].pop('name', None)
+        # put bad_chs to right places
+        bad_chs_dict = self.metadata_input['device'].pop('bad_chs', None)
+        if bad_chs_dict is not None:
+            for dev_name, bad_chs in bad_chs_dict.items():
+                self.metadata_input['device'][dev_name]['bad_chs'] = bad_chs
+
+        # final touches...
+        if self.experiment_type == 'auditory':
+            self.metadata_input['experiment_description'] = (
+                'Auditory experiment with {} stimulus'.format(self.metadata_input['stimulus']['name']))
+        if 'session_description' not in self.metadata_input:
+            self.metadata_input['session_description'] = self.metadata_input['experiment_description']
+
 
 
 class MetadataManager:
@@ -216,17 +234,8 @@ class MetadataManager:
 
     def extract_metadata(self):
         metadata_input = self.metadata_reader.read()
-        # metadata_input should have only the following top-level keys
-        # ('block', 'experiment', 'device', 'stimulus') and optionally 'name'
 
         metadata = self._extract(metadata_input)
-
-        # final touches...
-        if self.experiment_type == 'auditory':
-            metadata['experiment_description'] = (
-                'Auditory experiment with {} stimulus'.format(metadata['stimulus']['name']))
-        if 'session_description' not in metadata:
-            metadata['session_description'] = metadata['experiment_description']
 
         if self.metadata_save_path is not None:
             write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_full.yaml',
@@ -244,11 +253,16 @@ class MetadataManager:
             metadata['block_name_in_source'] = input_block_name
 
         # extract core fields first
-        for key in ('experiment', 'stimulus', 'device'):
-            value = metadata_input.pop(key)
+        for key in ('subject', 'experiment', 'stimulus', 'device'):
+            value = metadata_input.pop(key, None)
+            if value is None:
+                continue
+            if key == 'subject':
+                metadata[key] = value
+                continue
             if key == 'experiment':
                 metadata.update(value)  # add to top level
-                self.__check_subject(metadata)
+                # self.__check_subject(metadata)
                 continue
             if key == 'stimulus':
                 self.__load_stimulus_info(value)
@@ -256,12 +270,18 @@ class MetadataManager:
                 continue
             if key == 'device':
                 self.__load_probes(value)
-                metadata[key] = value
+                # metadata[key] = value
+                device_metadata = value
                 continue
+
+        self.__check_subject(metadata)
 
         # extract and keep all other fields
         for key, value in metadata_input.items():
             metadata[key] = value
+
+        # add device fields at the end (for readability)
+        metadata['device'] = device_metadata
         return metadata
 
     def __check_subject(self, metadata):
