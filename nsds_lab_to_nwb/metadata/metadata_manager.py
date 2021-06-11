@@ -36,6 +36,7 @@ class MetadataReader:
                        self.metadata_input)
 
         self.parse()
+        self.common_check()
         self.extra_cleanup()
         if self.metadata_save_path is not None:
             write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_input_clean.yaml',
@@ -55,8 +56,31 @@ class MetadataReader:
         self.metadata_input = apply_keymap(self.metadata_input.copy(),
                                            keymap_file='metadata_keymap')
 
+    def common_check(self):
+        ''' make sure that core fields exist before further expanding metadata components.
+        common for both new and legacy pipelines.
+        '''
+        if 'subject' not in self.metadata_input:
+            self.metadata_input['subject'] = {}
+
+        device_metadata = self.metadata_input['device']
+        for key in ('ECoG', 'Poly'):
+            if 'description' not in device_metadata[key]:
+                device_metadata[key]['description'] = device_metadata[key]['name']
+            if 'location' not in device_metadata[key]:
+                device_metadata[key]['location'] = ''
+
     def extra_cleanup(self):
-        pass
+        # device
+        device_metadata = self.metadata_input['device']
+        ecog_lat_loc = device_metadata['ECoG'].pop('ecog_lat_loc', None)
+        ecog_post_loc = device_metadata['ECoG'].pop('ecog_post_loc', None)
+        if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
+            device_metadata['ECoG']['location'] = (
+                f'{ecog_lat_loc} mm from lateral ridge '
+                f'and {ecog_post_loc} mm from posterior ridge.'
+                )
+        device_metadata['Poly']['location'] = 'Within the ECoG grid.'   # fixed
 
     def _temporary_load_from_csv(self):
         # direct input from the block yaml file (not yet expanded)
@@ -131,8 +155,6 @@ class LegacyMetadataReader(MetadataReader):
                     or len(self.metadata_input['session_description']) == 0):
             self.metadata_input['session_description'] = (
                 'Auditory experiment with {} stimulus'.format(self.metadata_input['stimulus']['name']))
-        if 'subject' not in self.metadata_input:
-            self.metadata_input['subject'] = {}
 
 
 class MetadataManager:
@@ -282,3 +304,17 @@ class MetadataManager:
                 probe_name = device_metadata[key]['name']
                 probe_path = os.path.join(self.yaml_lib_path, 'probe', probe_name + '.yaml')
                 device_metadata[key].update(read_yaml(probe_path))
+
+                # TODO/CONSIDER: apply offset to all poly ch_pos systematically?
+                # (using device_metadata['Poly']['poly_ap_loc']
+                # and device_metadata['Poly']['poly_dev_loc'])
+
+                # format device description
+                nchannels, device_type, manufacturer = (
+                    device_metadata[key]['nchannels'],
+                    device_metadata[key]['device_type'],
+                    device_metadata[key]['manufacturer'])
+                device_metadata[key]['description'] = (
+                    f'{nchannels}-ch {key} '
+                    # f'({device_type}) '
+                    f'from {manufacturer}')

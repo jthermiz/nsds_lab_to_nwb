@@ -114,6 +114,11 @@ keymap:
   mapto: device.ECoG.acq
   description: ''
 
+- name: ecog_imp
+  comes_from: block_metadata
+  mapto: device.ECoG.imp
+  description: ''
+
 - name: poly_type
   comes_from: experiment_metadata
   mapto: device.Poly.name
@@ -127,6 +132,11 @@ keymap:
 - name: poly_acq
   comes_from: experiment_metadata
   mapto: device.Poly.acq
+  description: ''
+
+- name: poly_imp
+  comes_from: block_metadata
+  mapto: device.Poly.imp
   description: ''
 
 - name: block_id
@@ -172,6 +182,16 @@ keymap:
 - name: poly_dev_loc
   comes_from: block_metadata
   mapto: device.Poly.
+  description: ''
+
+- name: ecog_bad_chs
+  comes_from: block_metadata
+  mapto: device.ECoG.bad_chs
+  description: ''
+
+- name: poly_bad_chs
+  comes_from: block_metadata
+  mapto: device.ECoG.bad_chs
   description: ''
 
 - name: clean_block
