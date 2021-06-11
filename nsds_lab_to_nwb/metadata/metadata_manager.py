@@ -6,6 +6,7 @@ from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
 
 from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
+from nsds_lab_to_nwb.metadata.keymap_helper import apply_keymap
 
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'
@@ -41,6 +42,14 @@ class MetadataReader:
         return self.metadata_input
 
     def load_metadata_source(self):
+        _, ext = os.path.splitext(self.block_metadata_path)
+        if ext in ('.yaml', '.yml'):
+            metadata_input = read_yaml(self.block_metadata_path)
+        else:
+            metadata_input = self._temporary_load_from_csv()
+        return metadata_input
+
+    def _temporary_load_from_csv(self):
         # direct input from the block yaml file (not yet expanded)
         _, _, block_tag = split_block_folder(self.block_folder)
         block_id = int(block_tag[1:])   # the integer after the 'B'
@@ -57,6 +66,14 @@ class MetadataReader:
         return metadata_input
 
     def extra_cleanup(self):
+        # self.parse_old()
+        self.parse()
+
+    def parse(self):
+        self.metadata_input = apply_keymap(self.metadata_input.copy(),
+                                           keymap_file='metadata_keymap')
+
+    def parse_old(self):
         # separate device-related fields
         experiment_metadata_input = self.metadata_input.pop('experiment')
         device_metadata_input = self.__separate_device_metadata(experiment_metadata_input)
@@ -149,6 +166,7 @@ class MetadataManager:
                  block_folder=None,
                  metadata_save_path=None,
                  experiment_type=_DEFAULT_EXPERIMENT_TYPE,
+                 legacy_block=None,
                  ):
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
@@ -158,7 +176,7 @@ class MetadataManager:
         self.metadata_save_path = metadata_save_path
         self.experiment_type = experiment_type
         self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
-        self.__detect_legacy_block()
+        self.__detect_legacy_block(legacy_block)
 
         if self.metadata_save_path is not None:
             os.makedirs(self.metadata_save_path, exist_ok=True)
@@ -176,7 +194,11 @@ class MetadataManager:
                             block_folder=self.block_folder,
                             metadata_save_path=self.metadata_save_path)
 
-    def __detect_legacy_block(self):
+    def __detect_legacy_block(self, legacy_block=None):
+        if (legacy_block is not None):
+            self.legacy_block = legacy_block
+            return
+
         # detect which pipeline is used, based on metadata format
         _, ext = os.path.splitext(self.block_metadata_path)
         if ext in ('.yaml', '.yml'):
