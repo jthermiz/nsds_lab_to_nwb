@@ -1,0 +1,185 @@
+description: 'NSDSLab metadata input key map'
+version: '2021-06 (dev)'
+
+# -----------------------------------------------------------------------------
+# keymap is a list of dictionaries, where each item looks like
+# - name: (str) old key in the metadata input
+#   comes_from: (str, optional) which metadata source this information comes from
+#   mapto: (str, optional) new key in the parsed metadata dictionary,
+#          with the target dict hierarchy delimited with a period (.).
+#          If null, old key is used;
+#          If ending with a period (.), old key is at the end of hierarchy
+#   description: (str, optional) optional text description
+# -----------------------------------------------------------------------------
+
+keymap:
+
+- name: experimenter
+  comes_from: experiment_metadata
+  mapto: null
+  description: ''
+
+- name: lab
+  comes_from: experiment_metadata
+  mapto: null
+  description: ''
+
+- name: institution
+  comes_from: experiment_metadata
+  mapto: null
+  description: ''
+
+- name: procedure_date
+  comes_from: experiment_metadata
+  mapto: experiment.meta.
+  description: ''
+
+- name: procedure_time
+  comes_from: experiment_metadata
+  mapto: experiment.meta.
+  description: ''
+
+- name: animal_number
+  comes_from: experiment_metadata
+  mapto: experiment.meta.
+  description: ''
+
+- name: animal_name
+  comes_from: experiment_metadata
+  mapto: experiment.subject.subject_id
+  description: ''
+
+- name: sex
+  comes_from: experiment_metadata
+  mapto: experiment.subject.
+  description: ''
+
+- name: species
+  comes_from: experiment_metadata
+  mapto: experiment.subject.
+  description: ''
+
+- name: genotype
+  comes_from: experiment_metadata
+  mapto: experiment.subject.
+  description: ''
+
+- name: animal_description
+  comes_from: experiment_metadata
+  mapto: experiment.subject.description
+  description: ''
+
+- name: weight
+  comes_from: experiment_metadata
+  mapto: experiment.subject.
+  description: ''
+
+- name: pharmacology
+  comes_from: experiment_metadata
+  mapto: null
+  description: ''
+
+- name: surgery
+  comes_from: experiment_metadata
+  mapto: null
+  description: ''
+
+- name: surgery_outcome
+  comes_from: experiment_metadata
+  mapto: experiment.meta.
+  description: ''
+
+- name: surgery_note
+  comes_from: experiment_metadata
+  mapto: experiment.meta.
+  description: ''
+
+- name: experiment_description
+  comes_from: experiment_metadata
+  mapto: null
+  description: ''
+
+- name: ecog_type
+  comes_from: experiment_metadata
+  mapto: device.ecog.name
+  description: ''
+
+- name: ecog_serial
+  comes_from: experiment_metadata
+  mapto: device.ecog.serial
+  description: ''
+
+- name: ecog_acq
+  comes_from: experiment_metadata
+  mapto: device.ecog.acq
+  description: ''
+
+- name: poly_type
+  comes_from: experiment_metadata
+  mapto: device.poly.name
+  description: ''
+
+- name: poly_serial
+  comes_from: experiment_metadata
+  mapto: device.poly.serial
+  description: ''
+
+- name: poly_acq
+  comes_from: experiment_metadata
+  mapto: device.poly.acq
+  description: ''
+
+- name: block_id
+  comes_from: block_metadata
+  mapto: null
+  description: ''
+
+- name: ecog
+  comes_from: block_metadata
+  mapto: block.has_ecog
+  description: ''
+
+- name: poly
+  comes_from: block_metadata
+  mapto: block.has_poly
+  description: ''
+
+- name: session_description
+  comes_from: block_metadata
+  mapto: null
+  description: ''
+
+- name: ecog_lat_loc
+  comes_from: block_metadata
+  mapto: device.ecog.
+  description: ''
+
+- name: ecog_post_loc
+  comes_from: block_metadata
+  mapto: device.ecog.
+  description: ''
+
+- name: poly_ap_loc
+  comes_from: block_metadata
+  mapto: device.poly.
+  description: ''
+
+- name: poly_dev_loc
+  comes_from: block_metadata
+  mapto: device.poly.
+  description: ''
+
+- name: clean_block
+  comes_from: block_metadata
+  mapto: block.is_clean_block
+  description: ''
+
+- name: stim_response
+  comes_from: block_metadata
+  mapto: block.
+  description: ''
+
+- name: notes
+  comes_from: block_metadata
+  mapto: null
+  description: ''
