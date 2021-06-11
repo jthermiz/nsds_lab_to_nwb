@@ -131,7 +131,7 @@ keymap:
 
 - name: block_id
   comes_from: block_metadata
-  mapto: null
+  mapto: block_meta.block_id
   description: ''
 
 - name: ecog

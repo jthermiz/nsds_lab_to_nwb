@@ -51,6 +51,13 @@ class MetadataReader:
             metadata_input = self._temporary_load_from_csv()
         return metadata_input
 
+    def parse(self):
+        self.metadata_input = apply_keymap(self.metadata_input.copy(),
+                                           keymap_file='metadata_keymap')
+
+    def extra_cleanup(self):
+        pass
+
     def _temporary_load_from_csv(self):
         # direct input from the block yaml file (not yet expanded)
         _, _, block_tag = split_block_folder(self.block_folder)
@@ -66,36 +73,6 @@ class MetadataReader:
         metadata_input['block'] = block_metadata_input
         metadata_input['experiment'] = experiment_metadata_input
         return metadata_input
-
-    def parse(self):
-        self.metadata_input = apply_keymap(self.metadata_input.copy(),
-                                           keymap_file='metadata_keymap')
-
-    def parse_old(self):
-        # separate device-related fields
-        experiment_metadata_input = self.metadata_input.pop('experiment')
-        device_metadata_input = self.__separate_device_metadata(experiment_metadata_input)
-        self.metadata_input['experiment'] = experiment_metadata_input
-        self.metadata_input['device'] = device_metadata_input
-
-        # separate stimulus metadata
-        if 'stim' in self.metadata_input['block']:
-            self.metadata_input['stimulus'] = {'name': self.metadata_input['block'].pop('stim')}
-
-    def __separate_device_metadata(self, experiment_metadata_input):
-        device_metadata = {}
-        for key in experiment_metadata_input.copy():
-            if ('ecog_' in key) or ('poly_' in key):
-                value = experiment_metadata_input.pop(key)
-                if key == 'ecog_type':
-                    device_metadata['ECoG'] = value
-                if key == 'poly_type':
-                    device_metadata['Poly'] = value
-                device_metadata[key] = value
-        return device_metadata
-
-    def extra_cleanup(self):
-        self.metadata_input.pop('block_id', None)
 
     @staticmethod
     def read_csv_row(file_path, block_id):
@@ -140,16 +117,6 @@ class LegacyMetadataReader(MetadataReader):
         self.metadata_input = apply_keymap(self.metadata_input.copy(),
                                            keymap_file='metadata_keymap_legacy')
 
-    def parse_old(self):
-        # separate stimulus metadata
-        if 'stimulus' in self.metadata_input:
-            self.metadata_input['stimulus'] = {'name': self.metadata_input.pop('stimulus')}
-
-        # collect other block metadata
-        self.metadata_input['block'] = {}
-        for key in ('poly_neighbors', 'bad_chs'):
-            self.metadata_input['block'][key] = self.metadata_input.pop(key)
-
     def extra_cleanup(self):
         # put bad_chs to right places
         bad_chs_dict = self.metadata_input['device'].pop('bad_chs', None)
@@ -159,11 +126,13 @@ class LegacyMetadataReader(MetadataReader):
 
         # final touches...
         if self.experiment_type == 'auditory':
-            self.metadata_input['experiment_description'] = (
+            self.metadata_input['experiment_description'] = 'Auditory experiment'
+        if ('session_description' not in self.metadata_input
+                    or len(self.metadata_input['session_description']) == 0):
+            self.metadata_input['session_description'] = (
                 'Auditory experiment with {} stimulus'.format(self.metadata_input['stimulus']['name']))
-        if 'session_description' not in self.metadata_input:
-            self.metadata_input['session_description'] = self.metadata_input['experiment_description']
-
+        if 'subject' not in self.metadata_input:
+            self.metadata_input['subject'] = {}
 
 
 class MetadataManager:
@@ -244,44 +213,40 @@ class MetadataManager:
         return metadata
 
     def _extract(self, metadata_input):
+        metadata_input['experiment_type'] = self.experiment_type
+
         metadata = {}
         metadata['block_name'] = self.block_folder
-        metadata['experiment_type'] = self.experiment_type
 
         input_block_name = metadata_input.pop('name', None)
         if (input_block_name is not None) and input_block_name != metadata['block_name']:
             metadata['block_name_in_source'] = input_block_name
 
-        # extract core fields first
-        for key in ('subject', 'experiment', 'stimulus', 'device'):
+        # extract and add metadata fields in this order
+        for key in ('experimenter', 'lab', 'institution',
+                    'experiment_description', 'session_description',
+                    'subject', 'surgery', 'pharmacology', 'notes',
+                    'experiment_meta', 'experiment_type',
+                    'stimulus', 'block_meta',
+                    'device'
+                    ):
             value = metadata_input.pop(key, None)
             if value is None:
                 continue
-            if key == 'subject':
-                metadata[key] = value
-                continue
-            if key == 'experiment':
-                metadata.update(value)  # add to top level
-                # self.__check_subject(metadata)
-                continue
             if key == 'stimulus':
                 self.__load_stimulus_info(value)
-                metadata[key] = value
-                continue
             if key == 'device':
                 self.__load_probes(value)
-                # metadata[key] = value
-                device_metadata = value
-                continue
-
-        self.__check_subject(metadata)
-
-        # extract and keep all other fields
-        for key, value in metadata_input.items():
             metadata[key] = value
 
-        # add device fields at the end (for readability)
-        metadata['device'] = device_metadata
+        # extract all remaining fields
+        for key, value in metadata_input.items():
+            logger.info(f'WARNING - unknown metadata field {key}')
+            metadata[key] = value
+
+        # final validation
+        self.__check_subject(metadata)
+
         return metadata
 
     def __check_subject(self, metadata):
