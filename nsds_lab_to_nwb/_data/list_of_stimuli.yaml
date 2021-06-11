@@ -1,12 +1,15 @@
 # list of known stimuli
 # each stimulus entry should have the following structure:
+# note that all paths are relative to stim_lib_path.
 # ---------------------------------------------------------------
 # stim_name:
-#   alt_names: [list of strings, where each string is an alternative name]
-#   description: 'optional string'
-#   audio_path: 'auditory stimulus wav path and file relative to stim_lib_path'
-#   marker_path: 'trigger wav indicating when events happens in auditory stimulus'
-#   parameter_path: 'path to parameters that describe auditory stimlus'
+#   alt_names: (list) list of strings, where each string is an alternative name
+#   description: (str) optional string
+#   audio_path: (str) path to auditory stimulus wav file
+#   marker_path: (str) path to the wav file that stores the marks
+#               indicating when events happens in auditory stimulus
+#   parameter_path: (str) path to the mat file, when available,
+#               that stores parameters that describe auditory stimlus
 # ---------------------------------------------------------------
 
 tone150:
@@ -15,7 +18,6 @@ tone150:
     audio_path: 'Tone150/freq_resp_area_stimulus_signal_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.wav'
     marker_path: 'Tone150/freq_resp_area_stimulus_trigger_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.wav'
     parameter_path: 'Tone150/Tone100_stim.stimVls.mat'
-
 
 timit:
     alt_names: []

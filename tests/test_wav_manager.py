@@ -9,7 +9,6 @@ from nsds_lab_to_nwb.utils import get_stim_lib_path
 class TestCase_WavManager(unittest.TestCase):
 
     stim_name = 'White noise'
-    # stim_path = '/run/user/1001/gvfs/smb-share:server=cadmus.lbl.gov,share=nselab/Stimulus'
     stim_path = get_stim_lib_path()
     stim_metadata = {'name': stim_name,
         'mark_offset': 0, 'first_mark': 0   # dummy values
