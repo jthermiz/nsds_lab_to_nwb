@@ -7,7 +7,5 @@ class DeviceOriginator():
         for device_name, dev_conf in self.metadata['device'].items():
             if isinstance(dev_conf, str): #Skip mark and audio,
                 continue
-            device_source = dev_conf['manufacturer']
-            device = nwb_content.create_device(name=device_name, 
-                                            #source=device_source
-                                            )
+            device = nwb_content.create_device(name=device_name,
+                                               manufacturer=dev_conf['manufacturer'])
