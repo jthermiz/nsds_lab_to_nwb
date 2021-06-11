@@ -101,32 +101,32 @@ keymap:
 
 - name: ecog_type
   comes_from: experiment_metadata
-  mapto: device.ecog.name
+  mapto: device.ECoG.name
   description: ''
 
 - name: ecog_serial
   comes_from: experiment_metadata
-  mapto: device.ecog.serial
+  mapto: device.ECoG.serial
   description: ''
 
 - name: ecog_acq
   comes_from: experiment_metadata
-  mapto: device.ecog.acq
+  mapto: device.ECoG.acq
   description: ''
 
 - name: poly_type
   comes_from: experiment_metadata
-  mapto: device.poly.name
+  mapto: device.Poly.name
   description: ''
 
 - name: poly_serial
   comes_from: experiment_metadata
-  mapto: device.poly.serial
+  mapto: device.Poly.serial
   description: ''
 
 - name: poly_acq
   comes_from: experiment_metadata
-  mapto: device.poly.acq
+  mapto: device.Poly.acq
   description: ''
 
 - name: block_id
@@ -156,22 +156,22 @@ keymap:
 
 - name: ecog_lat_loc
   comes_from: block_metadata
-  mapto: device.ecog.
+  mapto: device.ECoG.
   description: ''
 
 - name: ecog_post_loc
   comes_from: block_metadata
-  mapto: device.ecog.
+  mapto: device.ECoG.
   description: ''
 
 - name: poly_ap_loc
   comes_from: block_metadata
-  mapto: device.poly.
+  mapto: device.Poly.
   description: ''
 
 - name: poly_dev_loc
   comes_from: block_metadata
-  mapto: device.poly.
+  mapto: device.Poly.
   description: ''
 
 - name: clean_block

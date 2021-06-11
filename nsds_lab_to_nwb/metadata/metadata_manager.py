@@ -139,7 +139,7 @@ class LegacyMetadataReader(MetadataReader):
             self.metadata_input['stimulus'] = {'name': self.metadata_input.pop('stimulus')}
 
         # collect other block metadata
-        self.metadata_input['block_meta'] = {}
+        self.metadata_input['block'] = {}
         for key in ('poly_neighbors', 'bad_chs'):
             self.metadata_input['block'][key] = self.metadata_input.pop(key)
 
@@ -284,5 +284,8 @@ class MetadataManager:
     def __load_probes(self, device_metadata):
         for key, value in device_metadata.items():
             if key in ('ECoG', 'Poly'):
-                probe_path = os.path.join(self.yaml_lib_path, 'probe', value + '.yaml')
-                device_metadata[key] = read_yaml(probe_path)
+                if isinstance(value, str):
+                    device_metadata[key] = {'name': value}
+                probe_name = device_metadata[key]['name']
+                probe_path = os.path.join(self.yaml_lib_path, 'probe', probe_name + '.yaml')
+                device_metadata[key].update(read_yaml(probe_path))
