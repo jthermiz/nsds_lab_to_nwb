@@ -16,11 +16,12 @@ class ElectrodesOriginator():
         for device_name in nwb_content.devices:
             device = nwb_content.devices[device_name]
             e_group = nwb_content.electrode_groups[device_name]
+            dev_config = self.metadata['device'][device_name]
 
             ## Add each electrode
             electrode_region = []
-            ch_ids = self.metadata['device'][device_name]['ch_ids']
-            ch_pos = self.metadata['device'][device_name]['ch_pos']
+            ch_ids = dev_config['ch_ids']
+            ch_pos = dev_config['ch_pos']
             for i in ch_ids:
                 e_id = next(e_id_gen)
                 nwb_content.add_electrode(
@@ -28,9 +29,9 @@ class ElectrodesOriginator():
                     x=ch_pos[str(i)]['x'],
                     y=ch_pos[str(i)]['y'],
                     z=ch_pos[str(i)]['z'],
-                    imp=np.nan, #TODO: INCLUDE IMPEDENCE
-                    location=str(i),
-                    filtering='Low-Pass Filtered to Nyquist frequency', # <<< this should be passed as part of metadata!
+                    location=dev_config['location'],
+                    imp=dev_config['imp'],
+                    filtering=dev_config['filtering'],
                     group=e_group)
                 # Collect device channel IDs for electrode table region
                 electrode_region.append(e_id)

@@ -1,6 +1,7 @@
 import logging
 import os
 import csv
+import numpy as np
 import pandas as pd
 from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
@@ -65,10 +66,25 @@ class MetadataReader:
 
         device_metadata = self.metadata_input['device']
         for key in ('ECoG', 'Poly'):
+            # required for ElectrodeGroup component
             if 'description' not in device_metadata[key]:
                 device_metadata[key]['description'] = device_metadata[key]['name']
             if 'location' not in device_metadata[key]:
+                # NEED: anatomical location in the brain, such as 'V1' or 'CA3'
+                # perhaps something like 'AC' or 'A1' in our cases?
                 device_metadata[key]['location'] = ''
+            if 'location_details' not in device_metadata[key]:
+                # more quantitative information
+                device_metadata[key]['location_details'] = ''
+
+            # required for Electrode component
+            if 'imp' not in device_metadata[key]:
+                # TODO: include impedance value
+                device_metadata[key]['imp'] = np.nan
+            if 'filtering' not in device_metadata[key]:
+                device_metadata[key]['filtering'] = (
+                    'Low-Pass Filtered to Nyquist frequency'    # confirm!
+                    )
 
     def extra_cleanup(self):
         # device
@@ -76,11 +92,11 @@ class MetadataReader:
         ecog_lat_loc = device_metadata['ECoG'].pop('ecog_lat_loc', None)
         ecog_post_loc = device_metadata['ECoG'].pop('ecog_post_loc', None)
         if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
-            device_metadata['ECoG']['location'] = (
+            device_metadata['ECoG']['location_details'] = (
                 f'{ecog_lat_loc} mm from lateral ridge '
                 f'and {ecog_post_loc} mm from posterior ridge.'
                 )
-        device_metadata['Poly']['location'] = 'Within the ECoG grid.'   # fixed
+        device_metadata['Poly']['location_details'] = 'Within the ECoG grid.'   # fixed
 
     def _temporary_load_from_csv(self):
         # direct input from the block yaml file (not yet expanded)
