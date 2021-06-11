@@ -27,6 +27,7 @@ poly_acq: TDT PZM5
 block_id: '01'
 ecog: 'TRUE'
 poly: 'FALSE'
+stimulus: White noise
 session_description: White noise
 ecog_lat_loc: '1'
 ecog_post_loc: '3'
