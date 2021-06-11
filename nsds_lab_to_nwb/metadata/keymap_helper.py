@@ -25,7 +25,7 @@ def _remap_and_inject(metadata_parsed, old_key, value, mapto=None):
         target = target[new_key]
 
 def apply_keymap(metadata_input, keymap_file='metadata_keymap', key_for_unknown='other'):
-    with importlib.resources.path('nsds_lab_to_nwb._data', f'{keymap_file}.yaml') as data_path:
+    with importlib.resources.path('nsds_lab_to_nwb.metadata.resources', f'{keymap_file}.yaml') as data_path:
         keymap = read_yaml(data_path)
 
     metadata_parsed = {}

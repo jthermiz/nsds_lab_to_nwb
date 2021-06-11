@@ -4,8 +4,8 @@ from scipy.io import wavfile
 from pynwb import TimeSeries
 
 from nsds_lab_to_nwb.common.io import read_yaml
-from nsds_lab_to_nwb.components.stimulus.stim_name_helper import check_stimulus_name
 from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
+from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 
 
 class WavManager():

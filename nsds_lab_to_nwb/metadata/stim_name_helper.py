@@ -4,7 +4,7 @@ import os
 from nsds_lab_to_nwb.common.io import read_yaml
 
 def check_stimulus_name(stim_name_input):
-    with importlib.resources.path('nsds_lab_to_nwb._data', 'list_of_stimuli.yaml') as data_path:
+    with importlib.resources.path('nsds_lab_to_nwb.metadata.resources', 'list_of_stimuli.yaml') as data_path:
         stim_directory = read_yaml(data_path)
 
     if stim_name_input in stim_directory.keys():

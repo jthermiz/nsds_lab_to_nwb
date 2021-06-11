@@ -7,8 +7,8 @@ from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
 
 from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
-from nsds_lab_to_nwb.components.stimulus.stim_name_helper import check_stimulus_name
 from nsds_lab_to_nwb.metadata.keymap_helper import apply_keymap
+from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 
 
 _DEFAULT_EXPERIMENT_TYPE = 'auditory'
