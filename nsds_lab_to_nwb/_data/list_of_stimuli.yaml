@@ -17,7 +17,7 @@ tone150:
     description: ''
     audio_path: 'Tone150/freq_resp_area_stimulus_signal_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.wav'
     marker_path: 'Tone150/freq_resp_area_stimulus_trigger_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.wav'
-    parameter_path: 'Tone150/Tone100_stim.stimVls.mat'
+    parameter_path: 'Tone150/freq_resp_area_stimulus_signal_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.mat'
 
 timit:
     alt_names: []
