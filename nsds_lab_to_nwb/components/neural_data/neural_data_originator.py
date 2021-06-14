@@ -1,6 +1,6 @@
 import logging.config
-from nsds_lab_to_nwb.components.htk.htk_manager import HtkManager
-from nsds_lab_to_nwb.components.tdt.tdt_manager import TdtManager
+from nsds_lab_to_nwb.components.htk.htk_manager import HTKManager
+from nsds_lab_to_nwb.components.tdt.tdt_manager import TDTManager
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +12,10 @@ class NeuralDataOriginator():
 
         if use_htk:
             logger.info('Using HTK')
-            self.neural_data_manager = HtkManager(self.dataset.htk_path)
+            self.neural_data_manager = HTKManager(self.dataset.htk_path)
         else:
             logger.info('Using TDT')
-            self.neural_data_manager = TdtManager(self.dataset.tdt_path)
+            self.neural_data_manager = TDTManager(self.dataset.tdt_path)
 
     def make(self, nwb_content, electrode_table_regions):
         for device_name, dev_conf in self.metadata['device'].items():

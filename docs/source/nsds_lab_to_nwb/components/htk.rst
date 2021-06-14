@@ -1,5 +1,15 @@
-nsds\_lab\_to\_nwb.components.htk.readers API
-=============================================
+components.htk API
+==================
+
+.. automodule:: nsds_lab_to_nwb.components.htk.htk_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: nsds_lab_to_nwb.components.htk.htk_reader
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 .. automodule:: nsds_lab_to_nwb.components.htk.readers.htkcollection
    :members:

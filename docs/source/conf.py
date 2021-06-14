@@ -55,7 +55,6 @@ sphinx_gallery_conf = {
     'examples_dirs': ['../../examples'],
     # path where to save gallery generated examples
     'gallery_dirs': ['auto_examples'],
-    #'subsection_order': ExplicitOrder(['../gallery/general', '../gallery/domain']),
     'backreferences_dir': 'gen_modules/backreferences',
     'download_all_examples': True,
     'min_reported_time': 5

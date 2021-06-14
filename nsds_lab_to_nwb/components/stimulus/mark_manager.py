@@ -1,6 +1,6 @@
 from pynwb import TimeSeries
 
-from nsds_lab_to_nwb.components.htk.htk_reader import HtkReader
+from nsds_lab_to_nwb.components.htk.htk_reader import HTKReader
 from nsds_lab_to_nwb.components.tdt.tdt_reader import TDTReader
 
 
@@ -12,7 +12,7 @@ class MarkManager():
         # Read the mark track
         if hasattr(self.dataset, 'htk_mark_path'):
             mark_path = self.dataset.htk_mark_path
-            mark_track, rate = HtkReader.read_htk(mark_path)
+            mark_track, rate = HTKReader.read_htk(mark_path)
         else:
             mark_track, meta = TDTReader(self.dataset.tdt_path).get_data('mrk1')
             rate = meta['sample_rate']
