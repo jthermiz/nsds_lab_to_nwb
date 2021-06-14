@@ -52,7 +52,7 @@ class AuditoryDataScanner(DataScanner):
         super().__init__(block_folder, data_path=data_path, use_htk=use_htk)
         self.stim_lib_path = get_stim_lib_path(stim_lib_path)
 
-        logger.info('AuditoryDataScanner: Using hard-coded subdirectories...')
+        logger.info('AuditoryDataScanner...')
 
     def extract_dataset(self):
         kwargs = {'stim_lib_path': self.stim_lib_path}

@@ -20,7 +20,7 @@ class MarkManager():
         # Create the mark timeseries
         mark_time_series = TimeSeries(name=name,
                                       data=mark_track,
-                                      unit='Volt',
+                                      unit='Volts',
                                       starting_time=0.0,
                                       rate=rate,
                                       description='The stimulus mark track.')

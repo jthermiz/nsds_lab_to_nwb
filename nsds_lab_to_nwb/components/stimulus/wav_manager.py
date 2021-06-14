@@ -1,13 +1,11 @@
 import os
 from scipy.io import wavfile
-from importlib_resources import files
 
 from pynwb import TimeSeries
 
 from nsds_lab_to_nwb.components.stimulus.stim_value_extractor import StimValueExtractor
 from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 from nsds_lab_to_nwb.utils import get_stim_lib_path
-from nsds_lab_to_nwb import _data
 
 
 class WavManager():
@@ -38,7 +36,7 @@ class WavManager():
         stim_time_series = TimeSeries(name=name,
                             data=stim_wav,
                             starting_time=starting_time,
-                            unit='Volt',
+                            unit='Volts',
                             rate=rate,
                             description='The neural recording aligned stimulus track.')
         return stim_time_series

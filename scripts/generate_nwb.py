@@ -1,7 +1,7 @@
 #!/user/bin/env python
 import logging.config
 import argparse
-from importlib_resources import files
+from importlib.resources import path
 
 import nsds_lab_to_nwb
 from nsds_lab_to_nwb.utils import (get_data_path, get_metadata_lib_path,
@@ -9,8 +9,7 @@ from nsds_lab_to_nwb.utils import (get_data_path, get_metadata_lib_path,
 from nsds_lab_to_nwb.nwb_builder import NWBBuilder
 
 
-fname = files(nsds_lab_to_nwb).joinpath('logging.conf')
-print(fname)
+fname = path(nsds_lab_to_nwb).joinpath('logging.conf')
 logging.config.fileConfig(fname, disable_existing_loggers=False)
 
 parser = argparse.ArgumentParser(description='Convert to a NWB file.')
