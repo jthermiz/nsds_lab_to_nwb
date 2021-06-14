@@ -1,0 +1,39 @@
+experimenter: Vanessa Gutierrez
+lab: Bouchard Lab
+institution: Lawrence Berkeley National Lab
+procedure_date: May 25, 2021
+procedure_time: '8:40'
+animal_number: '16'
+animal_name: RVG16
+sex: M
+species: Sprague Dawley
+genotype: Wild type
+animal_description: Charles River
+weight: '466'
+pharmacology: Anesthesized with Ketamine (90 mg/kg induction and 55 mg/kg maintence)
+  and Xyzaline (10 mg/kg induction and 5 mg/kg maintence)
+surgery: Right temporal lobe craniotomy w/ durotomy
+surgery_outcome: Ok
+surgery_notes: Clean window. minimal damage to surface
+experiment_description: This is an acute rat experiment. Auditory stimuli are played
+  to an anesthsized rat and electrophysiological measurements are made auditory cortex
+ecog_type: ecog128
+ecog_serial: R42/R43
+ecog_acq: TDT PZM5
+poly_type: camb64
+poly_serial: '5500'
+poly_acq: TDT PZM5
+# .nan: ' '
+block_id: '01'
+ecog: 'TRUE'
+poly: 'FALSE'
+stimulus: White noise
+session_description: White noise
+ecog_lat_loc: '1'
+ecog_post_loc: '3'
+poly_ap_loc: .nan
+poly_dev_loc: .nan
+clean_block: 'TRUE'
+stim_response: Good
+notes: All channels responded except obvious bad channels, some responses were not
+  as spike, maybe due to slight damage to brain

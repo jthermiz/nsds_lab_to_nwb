@@ -10,6 +10,6 @@ class ElectrodeGroupsOriginator():
         for device_name, device in nwb_content.devices.items():
             e_group = nwb_content.create_electrode_group(
                 name=device_name,
-                description='',     # --- TODO: specify in metadata
-                location='',        # --- TODO: specify in metadata
+                description=self.metadata['device'][device_name]['description'],
+                location=self.metadata['device'][device_name]['location'],
                 device=device)

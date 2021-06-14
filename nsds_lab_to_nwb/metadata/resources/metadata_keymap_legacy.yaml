@@ -1,0 +1,105 @@
+description: 'NSDSLab LEGACY metadata input key map'
+version: '2021-06 (dev)'
+
+# -----------------------------------------------------------------------------
+# keymap is a list of dictionaries, where each item looks like
+# - name: (str) old key in the metadata input
+#   comes_from: (str, optional) which metadata source this information comes from
+#   mapto: (str, optional) new key in the parsed metadata dictionary,
+#          with the target dict hierarchy delimited with a period (.).
+#          If null, old key is used;
+#          If ending with a period (.), old key is at the end of hierarchy
+#   description: (str, optional) optional text description
+# -----------------------------------------------------------------------------
+
+keymap:
+
+- name: name
+  comes_from: block
+  mapto: block_name
+  description: ''
+
+- name: experiment_description
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: session_description
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: dac
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: institution
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: lab
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: experimenter
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: notes
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: surgery
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: pharmacology
+  comes_from: experiment
+  mapto: null
+  description: ''
+
+- name: ECoG
+  comes_from: device
+  mapto: device.ECoG.name
+  description: ''
+
+- name: Poly
+  comes_from: device
+  mapto: device.Poly.name
+  description: ''
+
+- name: mark
+  comes_from: device
+  mapto: htk_meta.mark_stream
+  description: ''
+
+- name: audio
+  comes_from: device
+  mapto: htk_meta.audio_stream
+  description: ''
+
+- name: comment
+  comes_from: device
+  mapto: device.
+  description: ''
+
+- name: stimulus
+  comes_from: block
+  mapto: stimulus.name
+  description: ''
+
+- name: poly_neighbors
+  comes_from: block
+  mapto: device.ECoG.poly_neighbors
+  description: ''
+
+- name: bad_chs
+  comes_from: device
+  mapto: device.bad_chs
+  description: ''
