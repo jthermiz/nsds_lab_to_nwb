@@ -6,7 +6,7 @@
 # to create a new environment with a different name, run:
 # >> conda env create --name ENV_NAME --file=environment.yml
 # ----------------------------------------------------------
-name: nsds_lab_to_nwb
+name: nsds_nwb
 channels:
   - defaults
   - conda-forge
@@ -21,6 +21,8 @@ dependencies:
   - pynwb
   - pyyaml
   - imageio
+  - pytest
+  - flake8
 
   - pip:
     - tdt
