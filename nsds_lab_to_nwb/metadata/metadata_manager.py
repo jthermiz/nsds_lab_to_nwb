@@ -1,13 +1,128 @@
+import logging
 import os
 import csv
 import pandas as pd
 from ..utils import (get_metadata_lib_path, get_stim_lib_path,
                      split_block_folder)
 
-from nsds_lab_to_nwb.common.io import read_yaml, csv_to_dict
+from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
 
 
-_DEFAULT_EXPERIMENT_TYPE = 'auditory'  # for legacy sessions
+_DEFAULT_EXPERIMENT_TYPE = 'auditory'
+
+logger = logging.getLogger(__name__)
+
+
+class MetadataReader:
+    ''' Reads metadata input for new experiments.
+    '''
+    def __init__(self,
+                block_metadata_path: str,
+                library_path: str,
+                block_folder: str,
+                metadata_save_path=None,
+                ):
+        self.block_metadata_path = block_metadata_path
+        self.library_path = library_path
+        self.block_folder = block_folder
+        self.metadata_save_path = metadata_save_path
+
+    def read(self):
+        self.metadata_input = self.load_metadata_source()
+        if self.metadata_save_path is not None:
+            write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_input.yaml',
+                       self.metadata_input)
+
+        self.extra_cleanup()
+        if self.metadata_save_path is not None:
+            write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_input_clean.yaml',
+                       self.metadata_input)
+
+        return self.metadata_input
+
+    def load_metadata_source(self):
+        # direct input from the block yaml file (not yet expanded)
+        _, _, block_tag = split_block_folder(self.block_folder)
+        block_id = int(block_tag[1:])   # the integer after the 'B'
+        block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
+
+        # also load experiment-level metadata
+        experiment_metadata_path = os.path.join(
+            os.path.dirname(self.block_metadata_path), 'meta_data.csv')
+        experiment_metadata_input = csv_to_dict(experiment_metadata_path)
+
+        metadata_input = {}
+        metadata_input['block'] = block_metadata_input
+        metadata_input['experiment'] = experiment_metadata_input
+        return metadata_input
+
+    def extra_cleanup(self):
+        # separate device-related fields
+        experiment_metadata_input = self.metadata_input.pop('experiment')
+        device_metadata_input = self.__separate_device_metadata(experiment_metadata_input)
+        self.metadata_input['experiment'] = experiment_metadata_input
+        self.metadata_input['device'] = device_metadata_input
+
+        # separate stimulus metadata
+        if 'stim' in self.metadata_input['block']:
+            self.metadata_input['stimulus'] = {'name': self.metadata_input['block'].pop('stim')}
+
+    def __separate_device_metadata(self, experiment_metadata_input):
+        device_metadata = {}
+        for key in experiment_metadata_input.copy():
+            if ('ecog_' in key) or ('poly_' in key):
+                value = experiment_metadata_input.pop(key)
+                if key == 'ecog_type':
+                    device_metadata['ECoG'] = value
+                if key == 'poly_type':
+                    device_metadata['Poly'] = value
+                device_metadata[key] = value
+        return device_metadata
+
+    @staticmethod
+    def read_csv_row(file_path, block_id):
+        all_blocks = pd.read_csv(file_path)
+        blk_row = all_blocks.loc[all_blocks['block_id'] == block_id] # single row of DataFrame
+        blk_dict = blk_row.to_dict(orient='records')[0] # a dict
+        return blk_dict
+
+
+class LegacyMetadataReader(MetadataReader):
+    ''' Reads metadata input for old experiments.
+    '''
+    def __init__(self,
+                block_metadata_path: str,
+                library_path: str,
+                block_folder: str,
+                metadata_save_path=None,
+                ):
+        MetadataReader.__init__(self, block_metadata_path, library_path,
+                                      block_folder, metadata_save_path)
+
+    def load_metadata_source(self):
+        # direct input from the block yaml file (not yet expanded)
+        metadata_input = read_yaml(self.block_metadata_path)
+
+        # TODO: separate (experiment, device) metadata library as legacy
+        yaml_lib_path = os.path.join(self.library_path, 'auditory', 'yaml/') # legacy datasets are auditory
+
+        # load from metadata library (legacy structure)
+        for key in ('experiment', 'device', 'stimulus'):
+            logger.info(f'expanding {key} from legacy metadata library...')
+            filename = metadata_input[key]
+            metadata_input[key] = read_yaml(
+                os.path.join(yaml_lib_path, key, filename + '.yaml'))
+
+        # collect other block metadata
+        metadata_input['block'] = {}
+        for key in ('poly_neighbors', 'bad_chs'):
+            metadata_input['block'][key] = metadata_input.pop(key)
+
+        return metadata_input
+
+    def extra_cleanup(self):
+        self.metadata_input['experiment'].pop('name', None)
+        self.metadata_input['device'].pop('name', None)
 
 
 class MetadataManager:
@@ -23,26 +138,43 @@ class MetadataManager:
         Path to stimulus library.
     block_folder : str
         Block specification.
+    metadata_save_path : str (optional)
+        Path to a directory where parsed metadata file(s) will be saved.
+        Files are saved only if metadata_save_path is provided.
     """
     def __init__(self,
                  block_metadata_path: str,
                  metadata_lib_path=None,
                  stim_lib_path=None,
                  block_folder=None,
+                 metadata_save_path=None,
+                 experiment_type=_DEFAULT_EXPERIMENT_TYPE,
                  ):
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
         self.stim_lib_path = get_stim_lib_path(stim_lib_path)
-        self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
+        self.block_folder = block_folder
+        self.surgeon_initials, self.animal_name, self.block_tag = split_block_folder(block_folder)
+        self.metadata_save_path = metadata_save_path
+        self.experiment_type = experiment_type
+        self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
         self.__detect_legacy_block()
 
-        self.read_block_metadata_file(block_folder=block_folder)
+        if self.metadata_save_path is not None:
+            os.makedirs(self.metadata_save_path, exist_ok=True)
 
-        # paths to metadata/stimulus library
-        self.yaml_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml/')
-        # if (stim_lib_path is None) and (self.experiment_type == 'auditory'):
-        #     stim_lib_path = os.path.join(self.library_path, self.experiment_type,
-        #             'configs_legacy/mars_configs/') # <<<< should move to a better subfolder
+        if self.legacy_block:
+            self.metadata_reader = LegacyMetadataReader(
+                            block_metadata_path=self.block_metadata_path,
+                            library_path=self.metadata_lib_path,
+                            block_folder=self.block_folder,
+                            metadata_save_path=self.metadata_save_path)
+        else:
+            self.metadata_reader = MetadataReader(
+                            block_metadata_path=self.block_metadata_path,
+                            library_path=self.metadata_lib_path,
+                            block_folder=self.block_folder,
+                            metadata_save_path=self.metadata_save_path)
 
     def __detect_legacy_block(self):
         # detect which pipeline is used, based on metadata format
@@ -54,148 +186,55 @@ class MetadataManager:
         else:
             raise ValueError('unknown block metadata format')
 
-    def read_block_metadata_file(self,
-            block_folder=None,
-            default_experiment_type=_DEFAULT_EXPERIMENT_TYPE):
-
-        if self.legacy_block:
-            # direct input from the block yaml file (not yet expanded)
-            self.block_metadata_input = read_yaml(self.block_metadata_path)
-        else:
-            block_id = self.block_name[1:]
-            self.block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
-
-        # new requirement for nsdslab data: experiment_type
-        self.experiment_type = self.block_metadata_input.pop('experiment_type', default_experiment_type)
-
-        if self.legacy_block:
-            return
-        self.__extend_experiment_and_device_metadata()
-
-    def __extend_experiment_and_device_metadata(self):
-        # this is somewhat ad hoc.
-        # new metadata pipeline will be updated in the near future
-
-        # unpack experiment
-        experiment_metadata_path = os.path.join(
-            os.path.dirname(self.block_metadata_path), 'meta_data.csv')
-        experiment_metadata_input = csv_to_dict(experiment_metadata_path)
-
-        device_metadata_input = self.__separate_device_metadata(experiment_metadata_input)
-        self.block_metadata_input['experiment'] = experiment_metadata_input
-        self.block_metadata_input['device'] = device_metadata_input
-
-        # separate stimulus metadata
-        if 'stim' in self.block_metadata_input:
-            self.block_metadata_input['stimulus'] = {'name': self.block_metadata_input.pop('stim')}
-
-    def __separate_device_metadata(self, metadata_input):
-        device_metadata = {}
-        for key in metadata_input.copy():
-            if ('ecog_' in key) or ('poly_' in key):
-                value = metadata_input.pop(key)
-                if key == 'ecog_type':
-                    device_metadata['ECoG'] = value
-                if key == 'poly_type':
-                    device_metadata['Poly'] = value
-                device_metadata[key] = value
-        return device_metadata
-
     def extract_metadata(self):
-        metadata = {}
-        metadata['block_name'] = self.block_name
-        metadata['experiment_type'] = self.experiment_type
+        metadata_input = self.metadata_reader.read()
+        # metadata_input should have only the following top-level keys
+        # ('block', 'experiment', 'device', 'stimulus') and optionally 'name'
 
-        # # expand metadata parts by extracting from library
-        for key, value in self.block_metadata_input.items():
-            if key == 'experiment':
-                self.expand_experiment(metadata, value)
-                continue
-            if key == 'device':
-                self.expand_device(metadata, value)
-                continue
-            if key == 'stimulus':
-                if self.experiment_type != 'auditory':
-                    raise ValueError('experiment type mismatch')
-                self.expand_stimulus(metadata, value)
-                continue
-            metadata[key] = value
+        metadata = self._extract(metadata_input)
 
-        # set experiment description
+        # final touches...
         if self.experiment_type == 'auditory':
-            metadata['experiment_description'] = metadata['stimulus']['name'] + ' Stimulus Experiment'
-        elif self.experiment_type == 'behavior':
-            metadata['experiment_description'] = 'Reaching Experiment' # <<<< any additional specification?
-        else:
-            metadata['experiment_description'] = 'Unknown'
-
-        # set session description, if not already existing
-        if not metadata.get('session_description', None):
+            metadata['experiment_description'] = (
+                'Auditory experiment with {} stimulus'.format(metadata['stimulus']['name']))
+        if 'session_description' not in metadata:
             metadata['session_description'] = metadata['experiment_description']
+
+        if self.metadata_save_path is not None:
+            write_yaml(f'{self.metadata_save_path}/{self.block_folder}_metadata_full.yaml',
+                       metadata)
+
         return metadata
 
-    def extract_metadata_old(self):
+    def _extract(self, metadata_input):
         metadata = {}
-        metadata['block_name'] = self.block_name
+        metadata['block_name'] = self.block_folder
         metadata['experiment_type'] = self.experiment_type
 
-        # expand metadata parts by extracting from library
-        for key, value in self.block_metadata_input.items():
+        input_block_name = metadata_input.pop('name', None)
+        if (input_block_name is not None) and input_block_name != metadata['block_name']:
+            metadata['block_name_in_source'] = input_block_name
+
+        # extract core fields first
+        for key in ('experiment', 'stimulus', 'device'):
+            value = metadata_input.pop(key)
             if key == 'experiment':
-                self.expand_experiment(metadata, value)
-                continue
-            if key == 'device':
-                self.expand_device(metadata, value)
+                metadata.update(value)  # add to top level
+                self.__check_subject(metadata)
                 continue
             if key == 'stimulus':
-                if self.experiment_type != 'auditory':
-                    raise ValueError('experiment type mismatch')
-                self.expand_stimulus(metadata, value)
+                self.__load_stimulus_info(value)
+                metadata[key] = value
                 continue
-            # else:
+            if key == 'device':
+                self.__load_probes(value)
+                metadata[key] = value
+                continue
+
+        # extract and keep all other fields
+        for key, value in metadata_input.items():
             metadata[key] = value
-
-        # set experiment description
-        if self.experiment_type == 'auditory':
-            metadata['experiment_description'] = metadata['stimulus']['name'] + ' Stimulus Experiment'
-        elif self.experiment_type == 'behavior':
-            metadata['experiment_description'] = 'Reaching Experiment' # <<<< any additional specification?
-        else:
-            metadata['experiment_description'] = 'Unknown'
-
-        # set session description, if not already existing
-        if not metadata['session_description']:
-            metadata['session_description'] = metadata['experiment_description']
         return metadata
-
-    def expand_experiment(self, metadata, filename, key='experiment'):
-        if isinstance(filename, str):
-            ref_data = read_yaml(os.path.join(
-                            self.yaml_lib_path, key, filename + '.yaml'))
-        elif isinstance(filename, dict):
-            ref_data = filename
-        ref_data.pop('name', None)
-        metadata.update(ref_data)  # add to top level
-        self.__check_subject(metadata)
-
-    def expand_device(self, metadata, filename, key='device'):
-        if isinstance(filename, str):
-            ref_data = read_yaml(os.path.join(
-                            self.yaml_lib_path, key, filename + '.yaml'))
-        elif isinstance(filename, dict):
-            ref_data = filename
-        self.__load_probes(ref_data)
-        metadata[key] = ref_data
-
-    def expand_stimulus(self, metadata, filename, key='stimulus'):
-        if isinstance(filename, str):
-            ref_data = read_yaml(os.path.join(
-                            self.yaml_lib_path, key, filename + '.yaml'))
-        elif isinstance(filename, dict):
-            ref_data = filename
-
-        ref_data['stim_lib_path'] = self.stim_lib_path # pass stim library path (ad hoc)
-        metadata[key] = ref_data
 
     def __check_subject(self, metadata):
         if 'subject' not in metadata:
@@ -209,15 +248,12 @@ class MetadataManager:
             if key not in metadata['subject']:
                 metadata['subject'][key] = 'Unknown'
 
+    def __load_stimulus_info(self, stimulus_metadata):
+        # stimulus_metadata['stim_lib_path'] = self.stim_lib_path
+        pass
+
     def __load_probes(self, device_metadata):
         for key, value in device_metadata.items():
             if key in ('ECoG', 'Poly'):
                 probe_path = os.path.join(self.yaml_lib_path, 'probe', value + '.yaml')
                 device_metadata[key] = read_yaml(probe_path)
-
-    @staticmethod
-    def read_csv_row(file_path, block_id):
-        all_blocks = pd.read_csv(file_path)
-        blk_row = all_blocks.loc[all_blocks['block_id'] == block_id] # single row of DataFrame
-        blk_dict = blk_row.to_dict(orient='records')[0] # a dict
-        return blk_dict
