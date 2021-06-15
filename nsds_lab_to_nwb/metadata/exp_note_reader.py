@@ -74,10 +74,11 @@ class ExpNoteReader():
         """
         raw_meta = self._raw_meta
         raw_block = self._raw_block
+        
         #clean up raw_meta
         raw_meta = raw_meta.iloc[:, 1]
-        raw_meta.dropna(inplace=True)
-        self.meta_df = raw_meta
+        good_indices = raw_meta.index.dropna()
+        raw_meta = raw_meta.loc[good_indices]       
         
         #clean up raw_block
         for idx, row in raw_block.iterrows():
@@ -92,8 +93,9 @@ class ExpNoteReader():
                 raw_block.drop(column, axis=1, inplace=True)
         raw_block = raw_block[:max_row]
         raw_block.dropna(axis=1, how='all', inplace=True)
-        self.block_df = raw_block
         
+        self.meta_df = raw_meta
+        self.block_df = raw_block        
     
     def read_csvs(self):
         """Read csv files
@@ -196,3 +198,7 @@ class ExpNoteReader():
             self.read_input()
             self.merge_meta_block()
         return self.nsds_meta
+
+path = '/home/jhermiz/Desktop/test'
+reader = ExpNoteReader(path, 'RVG16_B01')
+reader.dump_yaml(write_path=path)
