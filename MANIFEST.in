@@ -1,0 +1,1 @@
+include nsds_lab_to_nwb *.conf *.yaml

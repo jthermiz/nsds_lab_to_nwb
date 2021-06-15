@@ -29,11 +29,13 @@ class DataScanner():
     '''
     def __init__(self, block_folder,
                  data_path: str = '',
+                 use_htk=False
                  ):
         self.data_path = data_path
         self.block_folder = block_folder
         self.data_path = get_data_path(data_path)
         self.surgeon_initials, self.animal_name, self.block_name = split_block_folder(block_folder)
+        self.use_htk = use_htk
 
     def extract_dataset(self):
         ''' returns a Dataset object '''
@@ -44,35 +46,38 @@ class DataScanner():
 class AuditoryDataScanner(DataScanner):
     def __init__(self, block_folder,
                  data_path: str = '',
-                 stim_lib_path=None):
+                 stim_lib_path=None,
+                 use_htk=False):
         # this sets self.animal_name, self.block_folder, and self.data_path
-        super().__init__(block_folder, data_path=data_path)
+        super().__init__(block_folder, data_path=data_path, use_htk=use_htk)
         self.stim_lib_path = get_stim_lib_path(stim_lib_path)
 
-        logger.info('AuditoryDataScanner: Using hard-coded subdirectories...')
+        logger.info('AuditoryDataScanner...')
 
     def extract_dataset(self):
         kwargs = {'stim_lib_path': self.stim_lib_path}
-        htk_path = self.__get_htk_path()
-        if htk_path is not None:
-            kwargs['htk_path'] = htk_path
-        tdt_path = self.__get_tdt_path()
-        if tdt_path is not None:
-            kwargs['tdt_path'] = tdt_path
-        mark_path = self.__find_mark_track()
-        if mark_path is not None:
-            kwargs['mark_path'] = mark_path
+        if self.use_htk:
+            htk_path = self.__get_htk_path()
+            if htk_path is not None:
+                kwargs['htk_path'] = htk_path
+            mark_path = self.__find_htk_mark_track()
+            if mark_path is not None:
+                kwargs['htk_mark_path'] = mark_path
+        else:
+            tdt_path = self.__get_tdt_path()
+            if tdt_path is not None:
+                kwargs['tdt_path'] = tdt_path
         return Dataset(self.block_folder,
                        data_path=self.data_path,
                        **kwargs)
 
-    def __find_mark_track(self, mark='mrk11.htk'):
+    def __find_htk_mark_track(self, mark='mrk11.htk'):
         path = os.path.join(self.add_block_subdir(self.data_path), mark)
         if not os.path.exists(path):
             path = None
         return path
 
-    def __get_htk_path(self, raw='RawHTK/'):
+    def __get_htk_path(self, raw='RawHTK'):
         path = os.path.join(self.add_block_subdir(self.data_path), raw)
         if not os.path.exists(path):
             path = None

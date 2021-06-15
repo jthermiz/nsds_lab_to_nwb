@@ -3,8 +3,8 @@ import os
 import csv
 import numpy as np
 import pandas as pd
-from ..utils import (get_metadata_lib_path, get_stim_lib_path,
-                     split_block_folder)
+from nsds_lab_to_nwb.utils import (get_metadata_lib_path, get_stim_lib_path,
+                                   split_block_folder)
 
 from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
 from nsds_lab_to_nwb.metadata.keymap_helper import apply_keymap

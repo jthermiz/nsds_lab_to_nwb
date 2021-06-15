@@ -8,11 +8,11 @@ class StimulusOriginator():
         self.dataset = dataset
         self.metadata = metadata
 
-        self.mark_manager = MarkManager(self.dataset.mark_path)
+        self.mark_manager = MarkManager(self.dataset)
         self.mark_tokenizer = MarkTokenizer(self.metadata['block_name'],
                                             self.metadata['stimulus'])
 
-        self.wav_manager = WavManager(self.dataset.stim_path,
+        self.wav_manager = WavManager(self.dataset.stim_lib_path,
                                       self.metadata['stimulus'])
 
     def make(self, nwb_content):
