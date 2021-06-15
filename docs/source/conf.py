@@ -18,7 +18,7 @@ import sys
 import sphinx_rtd_theme
 
 
-project_root = os.path.dirname(os.getcwd())
+project_root = os.path.dirname(os.path.dirname(os.getcwd()))
 sys.path.insert(0, project_root)
 
 
