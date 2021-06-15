@@ -2,9 +2,10 @@ import pandas as pd
 import os
 import yaml
 from nsds_lab_to_nwb.utils import split_block_folder
+from nsds_lab_to_nwb.common.io import write_yaml
 
 class ExpNoteReader():
-    def __init__(self, path, block_folder):
+    def __init__(self, path, block_folder, input_format=None):
         """Class for parsing experiment notes
 
         Parameters
@@ -22,7 +23,7 @@ class ExpNoteReader():
             implemented
         """
         self.path = path
-        self.input_format = None
+        self.input_format = input_format
         self.block_folder = block_folder
         _, _, blockstr = split_block_folder(block_folder)
         self.block_id = int(blockstr[1:])        
@@ -30,26 +31,38 @@ class ExpNoteReader():
         self._raw_meta = None 
         self._raw_block = None
         
-        # autodetect input format
-        if path.startswith('http'):
-            self.input_format = 'gs'            
-        else:        
+        no_file_flag = False
+        # force input if specified
+        if self.input_format != 'gs':
             path_contents = os.listdir(path)
             for file in path_contents:
-                if file.endswith('.ods'): #priority for ods format
-                    self.input_format = 'ods'
+                if file.endswith('.' + self.input_format):
                     self.file.append(file)
-                    break
-                if file.endswith('.xlsx'): 
-                    self.input_format = 'xlsx'
-                    self.file.append(file)
-                    break
-                if file.endswith('.csv'): 
-                    self.input_format = 'csv'
-                    self.file.append(file)                    
+            if len(self.file) == 0:
+                no_file_flag = True
+        else:
+        # autodetect input format
+            if path.startswith('http'):
+                self.input_format = 'gs'            
+            else:        
+                path_contents = os.listdir(path)
+                for file in path_contents:
+                    if file.endswith('.ods'): #priority for ods format
+                        self.input_format = 'ods'
+                        self.file.append(file)
+                        break
+                    if file.endswith('.xlsx'): 
+                        self.input_format = 'xlsx'
+                        self.file.append(file)
+                        break
+                    if file.endswith('.csv'): 
+                        self.input_format = 'csv'
+                        self.file.append(file)  
+                if len(self.file) == 0:
+                    no_file_flag = True
         
-        if self.input_format is None:
-            raise Exception('Unknown input format')
+        if no_file_flag:
+            raise FileNotFoundError
         
         self.meta_df = None
         self.block_df = None
@@ -81,6 +94,7 @@ class ExpNoteReader():
         raw_meta = raw_meta.loc[good_indices]       
         
         #clean up raw_block
+        max_row = len(raw_block)
         for idx, row in raw_block.iterrows():
             try:
                 _ = int(row['block_id'])
@@ -166,10 +180,7 @@ class ExpNoteReader():
         meta = self.meta_df.to_dict()
         meta.update(sub_block)
         self.nsds_meta = meta
-    
-    def _dump_dict_as_yaml(self, file_name, my_dict):        
-        with open(file_name, 'w') as file:
-            yaml.dump(my_dict, file)   
+ 
     
     def dump_yaml(self, write_path=None):
         """Dump yaml file
@@ -184,7 +195,7 @@ class ExpNoteReader():
             write_path = self.path
         nsds_meta = self.get_nsds_meta()
         write_path_file = os.path.join(write_path, self.block_folder + '.yaml')
-        self._dump_dict_as_yaml(write_path_file, nsds_meta)
+        write_yaml(write_path_file, nsds_meta, sort_keys=True)
     
     def get_nsds_meta(self):
         """Get parsed data
@@ -199,6 +210,3 @@ class ExpNoteReader():
             self.merge_meta_block()
         return self.nsds_meta
 
-path = '/home/jhermiz/Desktop/test'
-reader = ExpNoteReader(path, 'RVG16_B01')
-reader.dump_yaml(write_path=path)
