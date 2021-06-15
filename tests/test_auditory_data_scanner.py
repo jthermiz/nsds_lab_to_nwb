@@ -1,8 +1,6 @@
-import os
-import numpy as np
 import unittest
 
-from nsds_lab_to_nwb.common.auditory_data_scanner import AuditoryDataScanner
+from nsds_lab_to_nwb.common.data_scanners import AuditoryDataScanner
 
 
 class TestCase_DataScanning(unittest.TestCase):

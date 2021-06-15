@@ -180,7 +180,6 @@ class NWBBuilder:
         logger.info('Writing down content to ' + self.output_file)
         with NWBHDF5IO(path=self.output_file, mode='w') as nwb_fileIO:
             nwb_fileIO.write(content)
-            nwb_fileIO.close()
 
         logger.info(self.output_file + ' file has been created.')
         return self.output_file

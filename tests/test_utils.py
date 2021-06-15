@@ -24,6 +24,7 @@ def test_split_block_folder():
 def test_get_data_path():
     """Tests data_path function."""
     data_path = '/home/user/data'
+    del os.environ['NSDS_DATA_PATH']
     assert data_path == get_data_path(data_path)
     with pytest.raises(ValueError):
         get_data_path(None)
@@ -37,6 +38,7 @@ def test_get_data_path():
 def test_get_metadata_lib_path():
     """Tests metadata_lib_path function."""
     metadata_path = '/home/user/metadata'
+    del os.environ['NSDS_METADATA_PATH']
     assert metadata_path == get_metadata_lib_path(metadata_path)
     with pytest.raises(ValueError):
         get_metadata_lib_path(None)
@@ -50,6 +52,7 @@ def test_get_metadata_lib_path():
 def test_get_stim_lib_path():
     """Tests stim_lib_path function."""
     stim_path = '/home/user/stim'
+    del os.environ['NSDS_STIMULI_PATH']
     assert stim_path == get_stim_lib_path(stim_path)
     with pytest.raises(ValueError):
         get_stim_lib_path(None)
