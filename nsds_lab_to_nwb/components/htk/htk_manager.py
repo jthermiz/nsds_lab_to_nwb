@@ -3,7 +3,7 @@ from pynwb.ecephys import ElectricalSeries
 from nsds_lab_to_nwb.components.htk.readers.instrument import EPhysInstrumentData
 
 
-class HtkManager():
+class HTKManager():
     def __init__(self, raw_path):
         self.raw_path = raw_path
 

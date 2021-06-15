@@ -1,17 +1,20 @@
 import tdt
 import warnings
 
-class TDTReader():
+
+class TDTReader:
     """TDT interface
+
+    Parameters
+    ----------
+    path: str
+        Path to tdt folder
+    verbose: bool, optional
+        Whether to print debugging statements. Defaults to False.
+    channels: list, optional
+        List of channel ids to import. Defaults to None.
     """
     def __init__(self, path, verbose=False, channels=None):
-        """
-
-        Args:
-            path (str): path to tdt folder
-            verbose (bool, optional): whether to print debugging statements. Defaults to False.
-            channels (list, optional): list of channel ids to import. Defaults to None.
-        """
         self.path = path
         self.channels = channels
         self.verbose = verbose

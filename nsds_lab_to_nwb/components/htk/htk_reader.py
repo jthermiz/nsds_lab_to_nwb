@@ -1,6 +1,6 @@
 from nsds_lab_to_nwb.components.htk.readers.htkfile import HTKFile
 
-class HtkReader():
+class HTKReader():
     def __init__(self):
         pass
 
