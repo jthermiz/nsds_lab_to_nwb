@@ -33,13 +33,14 @@ class ExpNoteReader():
         
         no_file_flag = False
         # force input if specified
-        if self.input_format != 'gs':
-            path_contents = os.listdir(path)
-            for file in path_contents:
-                if file.endswith('.' + self.input_format):
-                    self.file.append(file)
-            if len(self.file) == 0:
-                no_file_flag = True
+        if self.input_format is not None:
+            if self.input_format != 'gs':
+                path_contents = os.listdir(path)
+                for file in path_contents:
+                    if file.endswith('.' + self.input_format):
+                        self.file.append(file)
+                if len(self.file) == 0:
+                    no_file_flag = True
         else:
         # autodetect input format
             if path.startswith('http'):
