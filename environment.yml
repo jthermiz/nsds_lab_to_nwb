@@ -21,7 +21,7 @@ dependencies:
   - pynwb
   - pyyaml
   - imageio
-  - pandas=0.25.3
+  - pandas
 
   - pip:
     - tdt

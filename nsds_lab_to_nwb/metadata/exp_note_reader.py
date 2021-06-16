@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-import yaml
 from nsds_lab_to_nwb.utils import split_block_folder
 from nsds_lab_to_nwb.common.io import write_yaml
 
@@ -131,13 +130,13 @@ class ExpNoteReader():
                                skiprows=1, 
                                names=['a', 'values', 'b', 'c'],
                                index_col=1,
-                               dtype=type('hello'))
+                               dtype=str)
         
         
         raw_block = pd.read_csv(block_path_file,
                                      delimiter=',',
                                      header=2,
-                                     dtype=type('hello'))   
+                                     dtype=str)   
         self._raw_meta = raw_meta
         self._raw_block = raw_block
     
@@ -145,16 +144,13 @@ class ExpNoteReader():
         """Read ods
         """
         path_file = os.path.join(self.path, self.file[0])
-        raw_meta = pd.read_excel(path_file, sheet_name='MetaData',                                  
-                               delimiter=',',
-                               index_col=1,
+        raw_meta = pd.read_excel(path_file, sheet_name='MetaData',index_col=1,
                                names=['a', 'b', 'values', 'c', 'd'],
-                               dtype=type('hello'), 
+                               dtype=str, 
                                engine='odf')
-        raw_block = pd.read_excel(path_file, sheet_name='BlockData',                                  
-                                     delimiter=',',
+        raw_block = pd.read_excel(path_file, sheet_name='BlockData', 
                                      header=2,
-                                     dtype=type('hello'),
+                                     dtype=str,
                                      engine='odf')
         self._raw_meta = raw_meta
         self._raw_block = raw_block
@@ -210,4 +206,3 @@ class ExpNoteReader():
             self.read_input()
             self.merge_meta_block()
         return self.nsds_meta
-
