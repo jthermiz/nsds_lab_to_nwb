@@ -1,9 +1,6 @@
 nsds\_lab\_to\_nwb API
 ======================
 
-Package Components
-------------------
-
 .. toctree::
    :maxdepth: 3
 
