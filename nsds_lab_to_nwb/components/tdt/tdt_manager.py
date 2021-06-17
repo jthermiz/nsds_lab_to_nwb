@@ -6,23 +6,29 @@ from nsds_lab_to_nwb.components.tdt.tdt_reader import TDTReader
 logger = logging.getLogger(__name__)
 
 
-class TdtManager():
+class TDTManager():
     def __init__(self, raw_tdt_path):
         # TDTReader.__init__(self, raw_tdt_path)
         self.tdt_reader = TDTReader(raw_tdt_path)
 
     def extract(self, device_name, dev_conf, electrode_table_region):
-        '''
-        extracts TDT data for a single device, and returns an ElectricalSeries.
+        """Extracts TDT data for a single device, and returns an ElectricalSeries.
 
-        Args:
-        - device_name: (str) either 'Wave' or 'Poly'
-        - dev_conf: (dict) metadata for the device.
-                           nwb_builder.metadata['device'][device_name]
-        - electrode_table_region: NWB electrode table region for the device
-        Returns:
-        - e_series: (ElectricalSeries) to be added to the NWB file (returns None if specifed device_name does not exist)
-        '''
+        Parameters
+        ----------
+        device_name: (str)
+            Either 'Wave' or 'Poly'
+        dev_conf: (dict) metadata for the device.
+            nwb_builder.metadata['device'][device_name]
+        electrode_table_region
+            NWB electrode table region for the device
+
+        Returns
+        -------
+        e_series: ElectricalSeries
+            Series to be added to the NWB file (returns None if specifed device_name does not exist)
+        """
+
         logger.info('Extracting for device: {}'.format(device_name))
 
         stream_list = self.tdt_reader.streams

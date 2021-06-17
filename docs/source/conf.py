@@ -18,7 +18,7 @@ import sys
 import sphinx_rtd_theme
 
 
-project_root = os.path.dirname(os.getcwd())
+project_root = os.path.dirname(os.path.dirname(os.getcwd()))
 sys.path.insert(0, project_root)
 
 
@@ -55,7 +55,6 @@ sphinx_gallery_conf = {
     'examples_dirs': ['../../examples'],
     # path where to save gallery generated examples
     'gallery_dirs': ['auto_examples'],
-    #'subsection_order': ExplicitOrder(['../gallery/general', '../gallery/domain']),
     'backreferences_dir': 'gen_modules/backreferences',
     'download_all_examples': True,
     'min_reported_time': 5

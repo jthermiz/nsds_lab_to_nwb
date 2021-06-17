@@ -1,5 +1,5 @@
-nsds\_lab\_to\_nwb.metadata API
-===============================
+Metadata API
+============
 
 .. automodule:: nsds_lab_to_nwb.metadata.metadata_manager
    :members:

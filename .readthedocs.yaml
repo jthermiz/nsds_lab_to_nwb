@@ -7,4 +7,4 @@ version: 2
 
 # Optionally set the version of Python and requirements required to build your docs
 conda:
-  environment: environment-dev.yml
+  environment: environment.yml
