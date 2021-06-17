@@ -23,8 +23,10 @@ dependencies:
   - imageio
   - pytest
   - flake8
+  - pandas
 
   - pip:
     - tdt
+    - odfpy
     - sphinx-rtd-theme
     - sphinx-gallery

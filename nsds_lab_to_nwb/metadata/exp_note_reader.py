@@ -1,10 +1,10 @@
 import pandas as pd
 import os
-import yaml
 from nsds_lab_to_nwb.utils import split_block_folder
+from nsds_lab_to_nwb.common.io import write_yaml
 
 class ExpNoteReader():
-    def __init__(self, path, block_folder):
+    def __init__(self, path, block_folder, input_format=None):
         """Class for parsing experiment notes
 
         Parameters
@@ -22,30 +22,47 @@ class ExpNoteReader():
             implemented
         """
         self.path = path
-        self.input_format = None
+        self.input_format = input_format
         self.block_folder = block_folder
         _, _, blockstr = split_block_folder(block_folder)
-        self.block_id = int(blockstr[1:])
-        
+        self.block_id = int(blockstr[1:])        
         self.file = []
+        self._raw_meta = None 
+        self._raw_block = None
         
-        # autodetect input format
-        if path.startswith('http'):
-            self.input_format = 'gs'            
-        else:        
-            path_contents = os.listdir(path)
-            for file in path_contents:
-                if file.endswith('.xlsx'): #priority for xlsx format
-                    self.input_format = 'xlsx'
-                    self.file.append(file)
-            if self.input_format is None:
+        no_file_flag = False
+        # force input if specified
+        if self.input_format is not None:
+            if self.input_format != 'gs':
+                path_contents = os.listdir(path)
                 for file in path_contents:
-                    if file.endswith('.csv'): #secondary are csv files
-                        self.input_format = 'csv'
+                    if file.endswith('.' + self.input_format):
                         self.file.append(file)
+                if len(self.file) == 0:
+                    no_file_flag = True
+        else:
+        # autodetect input format
+            if path.startswith('http'):
+                self.input_format = 'gs'            
+            else:        
+                path_contents = os.listdir(path)
+                for file in path_contents:
+                    if file.endswith('.ods'): #priority for ods format
+                        self.input_format = 'ods'
+                        self.file.append(file)
+                        break
+                    if file.endswith('.xlsx'): 
+                        self.input_format = 'xlsx'
+                        self.file.append(file)
+                        break
+                    if file.endswith('.csv'): 
+                        self.input_format = 'csv'
+                        self.file.append(file)  
+                if len(self.file) == 0:
+                    no_file_flag = True
         
-        if self.input_format is None:
-            raise Exception('Unknown input format')
+        if no_file_flag:
+            raise FileNotFoundError
         
         self.meta_df = None
         self.block_df = None
@@ -61,7 +78,39 @@ class ExpNoteReader():
             self.read_xlsx()
         elif self.input_format == 'gs':
             self.read_gs()        
+        elif self.input_format == 'ods':
+            self.read_ods()
+        self.parse_sheets()
         
+    def parse_sheets(self):
+        """Parse raw dataframes read from experiment notes
+        """
+        raw_meta = self._raw_meta
+        raw_block = self._raw_block
+        
+        #clean up raw_meta
+        raw_meta = raw_meta.iloc[:, 1]
+        good_indices = raw_meta.index.dropna()
+        raw_meta = raw_meta.loc[good_indices]       
+        
+        #clean up raw_block
+        max_row = len(raw_block)
+        for idx, row in raw_block.iterrows():
+            try:
+                _ = int(row['block_id'])
+            except:
+                max_row = idx
+                break
+            
+        for column in raw_block.columns:
+            if column.startswith('Unnamed'):
+                raw_block.drop(column, axis=1, inplace=True)
+        raw_block = raw_block[:max_row]
+        raw_block.dropna(axis=1, how='all', inplace=True)
+        
+        self.meta_df = raw_meta
+        self.block_df = raw_block        
+    
     def read_csvs(self):
         """Read csv files
         """
@@ -81,39 +130,33 @@ class ExpNoteReader():
                                skiprows=1, 
                                names=['a', 'values', 'b', 'c'],
                                index_col=1,
-                               dtype=type('hello'))
-        raw_meta = raw_meta.iloc[:, 1]
-        raw_meta.dropna(inplace=True)
-        self.meta_df = raw_meta
+                               dtype=str)
         
-        block_df = pd.read_csv(block_path_file,
+        
+        raw_block = pd.read_csv(block_path_file,
                                      delimiter=',',
                                      header=2,
-                                     dtype=type('hello'))   
-        
-        #clean up block_df
-        for idx, row in block_df.iterrows():
-            try:
-                _ = int(row['block_id'])
-            except:
-                max_row = idx
-                break
-            
-        for column in block_df.columns:
-            if column.startswith('Unnamed'):
-                block_df.drop(column, axis=1, inplace=True)
-        block_df = block_df[:max_row]
-        block_df.dropna(axis=1, how='all', inplace=True)
-        self.block_df = block_df
-         
+                                     dtype=str)   
+        self._raw_meta = raw_meta
+        self._raw_block = raw_block
+    
+    def read_ods(self):
+        """Read ods
+        """
+        path_file = os.path.join(self.path, self.file[0])
+        raw_meta = pd.read_excel(path_file, sheet_name='MetaData',index_col=1,
+                               names=['a', 'b', 'values', 'c', 'd'],
+                               dtype=str, 
+                               engine='odf')
+        raw_block = pd.read_excel(path_file, sheet_name='BlockData', 
+                                     header=2,
+                                     dtype=str,
+                                     engine='odf')
+        self._raw_meta = raw_meta
+        self._raw_block = raw_block
     
     def read_xlsx(self):
         """Read xlsx
-
-        Raises
-        ------
-        NotImplementedError
-            ToDo
         """
         raise NotImplementedError('TODO')
     
@@ -134,16 +177,22 @@ class ExpNoteReader():
         meta = self.meta_df.to_dict()
         meta.update(sub_block)
         self.nsds_meta = meta
+ 
     
-    def _dump_dict_as_yaml(self, file_name, my_dict):        
-        with open(file_name, 'w') as file:
-            yaml.dump(my_dict, file)   
-    
-    def dump_yaml(self):
-        """Dump parsed data as yaml 
+    def dump_yaml(self, write_path=None):
+        """Dump yaml file
+
+        Parameters
+        ----------
+        write_path : str, optional
+            Path to write yaml file, by default None
+            If None writes to self.path
         """
+        if write_path is None:
+            write_path = self.path
         nsds_meta = self.get_nsds_meta()
-        self._dump_dict_as_yaml(self.block_folder + '.yaml', nsds_meta)
+        write_path_file = os.path.join(write_path, self.block_folder + '.yaml')
+        write_yaml(write_path_file, nsds_meta, sort_keys=True)
     
     def get_nsds_meta(self):
         """Get parsed data
@@ -157,4 +206,3 @@ class ExpNoteReader():
             self.read_input()
             self.merge_meta_block()
         return self.nsds_meta
-        
