@@ -22,12 +22,12 @@ class MetadataReader:
     '''
     def __init__(self,
                 block_metadata_path: str,
-                library_path: str,
+                metadata_lib_path: str,
                 block_folder: str,
                 metadata_save_path=None,
                 ):
         self.block_metadata_path = block_metadata_path
-        self.library_path = library_path
+        self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
         self.block_folder = block_folder
         self.metadata_save_path = metadata_save_path
 
@@ -116,17 +116,17 @@ class LegacyMetadataReader(MetadataReader):
     '''
     def __init__(self,
                 block_metadata_path: str,
-                library_path: str,
+                metadata_lib_path: str,
                 block_folder: str,
                 metadata_save_path=None,
                 ):
-        MetadataReader.__init__(self, block_metadata_path, library_path,
-                                      block_folder, metadata_save_path)
+        super().__init__(block_metadata_path, metadata_lib_path,
+                         block_folder, metadata_save_path)
 
         self.experiment_type = 'auditory'   # for legacy auditory datasets
 
         # TODO: separate (experiment, device) metadata library as legacy
-        self.legacy_lib_path = os.path.join(self.library_path, self.experiment_type, 'yaml/')
+        self.legacy_lib_path = os.path.join(self.metadata_lib_path, self.experiment_type, 'yaml')
 
     def load_metadata_source(self):
         # direct input from the block yaml file (not yet expanded)
@@ -137,7 +137,7 @@ class LegacyMetadataReader(MetadataReader):
             logger.info(f'expanding {key} from legacy metadata library...')
             filename = metadata_input.pop(key)
             ref_data = read_yaml(
-                os.path.join(self.legacy_lib_path, key, filename + '.yaml'))
+                os.path.join(self.legacy_lib_path, key, f'{filename}.yaml'))
             ref_data.pop('name', None)
             metadata_input.update(ref_data)
         return metadata_input
@@ -210,13 +210,13 @@ class MetadataManager:
         if self.legacy_block:
             self.metadata_reader = LegacyMetadataReader(
                             block_metadata_path=self.block_metadata_path,
-                            library_path=self.metadata_lib_path,
+                            metadata_lib_path=self.metadata_lib_path,
                             block_folder=self.block_folder,
                             metadata_save_path=self.metadata_save_path)
         else:
             self.metadata_reader = MetadataReader(
                             block_metadata_path=self.block_metadata_path,
-                            library_path=self.metadata_lib_path,
+                            metadata_lib_path=self.metadata_lib_path,
                             block_folder=self.block_folder,
                             metadata_save_path=self.metadata_save_path)
 

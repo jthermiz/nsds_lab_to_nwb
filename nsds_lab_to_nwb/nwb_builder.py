@@ -60,8 +60,8 @@ class NWBBuilder:
             block_folder: str,
             save_path: str,
             block_metadata_path: str,
-            metadata_lib_path: str = '',
-            stim_lib_path: str = '',
+            metadata_lib_path: str = None,
+            stim_lib_path: str = None,
             session_start_time=_DEFAULT_SESSION_START_TIME,
             use_htk=False
     ):

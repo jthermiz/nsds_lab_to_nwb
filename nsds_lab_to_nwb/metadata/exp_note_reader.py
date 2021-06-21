@@ -4,23 +4,23 @@ from nsds_lab_to_nwb.utils import split_block_folder
 from nsds_lab_to_nwb.common.io import write_yaml
 
 class ExpNoteReader():
+    """Class for parsing experiment notes
+
+    Parameters
+    ----------
+    path : str
+        Path or Google Sheets URL to the experiment notes
+    block_folder : str
+        Name of the block to parse for
+
+    Raises
+    ------
+    Exception
+        Raises exception when trying to parse xlsx or
+        Google sheets because those parses are not
+        implemented
+    """
     def __init__(self, path, block_folder, input_format=None):
-        """Class for parsing experiment notes
-
-        Parameters
-        ----------
-        path : str
-            Path or Google Sheets URL to the experiment notes
-        block_folder : str
-            Name of the block to parse for
-
-        Raises
-        ------
-        Exception
-            Raises exception when trying to parse xlsx or
-            Google sheets because those parses are not
-            implemented
-        """
         self.path = path
         self.input_format = input_format
         self.block_folder = block_folder
@@ -106,7 +106,7 @@ class ExpNoteReader():
             if column.startswith('Unnamed'):
                 raw_block.drop(column, axis=1, inplace=True)
         raw_block = raw_block[:max_row]
-        raw_block.dropna(axis=1, how='all', inplace=True)
+        raw_block = raw_block.dropna(axis=1, how='all')
         
         self.meta_df = raw_meta
         self.block_df = raw_block        
