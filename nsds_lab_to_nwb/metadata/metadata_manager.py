@@ -64,6 +64,12 @@ class MetadataReader:
         if 'subject' not in self.metadata_input:
             self.metadata_input['subject'] = {}
 
+        if 'session_description' not in self.metadata_input:
+            try:
+                self.metadata_input['session_description'] = self.metadata_input['stimulus']['name']
+            except KeyError:
+                self.metadata_input['session_description'] = 'Unknown'
+
         device_metadata = self.metadata_input['device']
         for key in ('ECoG', 'Poly'):
             # required for ElectrodeGroup component
@@ -236,14 +242,11 @@ class MetadataManager:
             self.legacy_block = legacy_block
             return
 
-        # detect which pipeline is used, based on metadata format
-        _, ext = os.path.splitext(self.block_metadata_path)
-        if ext in ('.yaml', '.yml'):
-            self.legacy_block = True
-        elif ext == '.csv':
+        # detect which pipeline is used, based on animal naming scheme
+        if self.surgeon_initials is not None:
             self.legacy_block = False
         else:
-            raise ValueError('unknown block metadata format')
+            self.legacy_block = True
 
     def extract_metadata(self):
         metadata_input = self.metadata_reader.read()
