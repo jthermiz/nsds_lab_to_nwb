@@ -64,6 +64,12 @@ class MetadataReader:
         if 'subject' not in self.metadata_input:
             self.metadata_input['subject'] = {}
 
+        if 'session_description' not in self.metadata_input:
+            try:
+                self.metadata_input['session_description'] = self.metadata_input['stimulus']['name']
+            except KeyError:
+                self.metadata_input['session_description'] = 'Unknown'
+
         device_metadata = self.metadata_input['device']
         for key in ('ECoG', 'Poly'):
             # required for ElectrodeGroup component
