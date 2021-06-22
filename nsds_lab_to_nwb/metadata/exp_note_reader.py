@@ -173,7 +173,9 @@ class ExpNoteReader():
     def merge_meta_block(self):
         """Merge meta and block dataframes and return as dictionary
         """
-        sub_block = self.block_df[self.block_df['block_id'].astype(int)==self.block_id].transpose().to_dict()[0]
+        sub_block = self.block_df[self.block_df['block_id'].astype(int)==self.block_id].transpose().to_dict()
+        key = list(sub_block.keys())[0]
+        sub_block = sub_block[key]
         meta = self.meta_df.to_dict()
         meta.update(sub_block)
         self.nsds_meta = meta
