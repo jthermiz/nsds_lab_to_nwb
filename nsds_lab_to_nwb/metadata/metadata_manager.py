@@ -7,6 +7,7 @@ from nsds_lab_to_nwb.utils import (get_metadata_lib_path, get_stim_lib_path,
                                    split_block_folder)
 
 from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
+from nsds_lab_to_nwb.metadata.exp_note_reader import ExpNoteReader
 from nsds_lab_to_nwb.metadata.keymap_helper import apply_keymap
 from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 
@@ -50,7 +51,13 @@ class MetadataReader:
         if ext in ('.yaml', '.yml'):
             metadata_input = read_yaml(self.block_metadata_path)
         else:
-            metadata_input = self._temporary_load_from_csv()
+            # first generate the block metadata file
+            experiment_path, block_metadata_file = os.path.dirname(self.block_metadata_path)
+            block_folder, ext = os.path.splitext(block_metadata_file)
+            reader = ExpNoteReader(experiment_path, block_folder)
+            reader.dump_yaml(write_path=self.block_metadata_path)
+            # then try reading again
+            metadata_input = read_yaml(self.block_metadata_path)
         return metadata_input
 
     def parse(self):
@@ -103,29 +110,6 @@ class MetadataReader:
                 f'and {ecog_post_loc} mm from posterior ridge.'
                 )
         device_metadata['Poly']['location_details'] = 'Within the ECoG grid.'   # fixed
-
-    def _temporary_load_from_csv(self):
-        # direct input from the block yaml file (not yet expanded)
-        _, _, block_tag = split_block_folder(self.block_folder)
-        block_id = int(block_tag[1:])   # the integer after the 'B'
-        block_metadata_input = self.read_csv_row(self.block_metadata_path, block_id)
-
-        # also load experiment-level metadata
-        experiment_metadata_path = os.path.join(
-            os.path.dirname(self.block_metadata_path), 'meta_data.csv')
-        experiment_metadata_input = csv_to_dict(experiment_metadata_path)
-
-        metadata_input = {}
-        metadata_input['block'] = block_metadata_input
-        metadata_input['experiment'] = experiment_metadata_input
-        return metadata_input
-
-    @staticmethod
-    def read_csv_row(file_path, block_id):
-        all_blocks = pd.read_csv(file_path)
-        blk_row = all_blocks.loc[all_blocks['block_id'] == block_id] # single row of DataFrame
-        blk_dict = blk_row.to_dict(orient='records')[0] # a dict
-        return blk_dict
 
 
 class LegacyMetadataReader(MetadataReader):
