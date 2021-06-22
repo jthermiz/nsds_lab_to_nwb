@@ -16,8 +16,8 @@ class TestCase_ExpNoteReader(unittest.TestCase):
         '''
         block_folder = 'RVG16_B02'
         _, animal_name, _ = split_block_folder(block_folder)
-        path = os.path.join(self.data_path, animal_name, block_folder)
-        reader = ExpNoteReader(path, block_folder)
+        experiment_path = os.path.join(self.data_path, animal_name)
+        reader = ExpNoteReader(experiment_path, block_folder)
         reader.dump_yaml(write_path=self.write_path)
 
 if __name__ == '__main__':
