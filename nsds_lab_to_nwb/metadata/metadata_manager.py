@@ -47,10 +47,9 @@ class MetadataReader:
         return self.metadata_input
 
     def load_metadata_source(self):
-        _, ext = os.path.splitext(self.block_metadata_path)
-        if ext in ('.yaml', '.yml'):
+        try:
             metadata_input = read_yaml(self.block_metadata_path)
-        else:
+        except FileNotFoundError:
             # first generate the block metadata file
             experiment_path, block_metadata_file = os.path.dirname(self.block_metadata_path)
             block_folder, ext = os.path.splitext(block_metadata_file)
