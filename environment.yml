@@ -30,3 +30,4 @@ dependencies:
     - odfpy
     - sphinx-rtd-theme
     - sphinx-gallery
+    - pytest-xdist
