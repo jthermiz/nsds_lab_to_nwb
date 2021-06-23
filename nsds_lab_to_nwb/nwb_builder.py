@@ -151,7 +151,7 @@ class NWBBuilder:
                 genotype=self.metadata['subject']['genotype'],
                 sex=self.metadata['subject']['sex'],
                 species=self.metadata['subject']['species'],
-                weight=self.metadata['weight'] + 'g',
+                weight=self.metadata['subject']['weight'] + 'g',
             ),
             notes=self.metadata.get('notes', None),
             pharmacology=self.metadata.get('pharmacology', None),
