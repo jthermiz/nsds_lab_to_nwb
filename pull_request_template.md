@@ -6,7 +6,7 @@ Closes #(issue number)
 
 # Checklist:
 
-- [ ] I ran `pytest --basetemp=tmp -sv -n 8 tests` on catscan from the root directory and all tests passed (you'll need to create a `tmp` directory)
-- [ ] I ran `flake8 <files modified by PR>` and have no formatting errors
-- [ ] I ran `make clean & make html` in the `docs` folder and there were no errors.
-- [ ] If I added, moved, or removed files, I have fixed the corresponding files in `docs/source`
+- [ ] All tests pass on catscan: run `pytest --basetemp=tmp -sv -n 8 tests` on catscan from the root directory
+- [ ] If needed, docs have been update: `docs/source` has been updated for any added, moved, or removed files
+- [ ] Docs build with no errors: run `make clean & make html` from the `docs` folder
+- [ ] No python formatting errors: run `flake8 nsds_lab_to_nwb tests` from the root directory
