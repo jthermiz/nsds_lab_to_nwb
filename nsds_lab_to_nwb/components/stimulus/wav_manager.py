@@ -59,7 +59,7 @@ class WavManager():
         elif stim_name == 'dmr':
             return os.path.join(path, 'DMR')
         else:
-            raise ValueError('unknown stimulus')
+            raise ValueError(f"Unknown stimulus type '{stim_name}'")
 
     def __load_stim_values(self):
         '''load stim_values from .mat or .csv files,

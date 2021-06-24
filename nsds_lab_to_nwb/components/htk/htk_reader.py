@@ -18,7 +18,7 @@ class HTKReader:
     def __init__(self, path, channels=None):
         self.path = path
 
-    def get_data(self, stream, dev_conf):
+    def get_data(self, *, stream=None, dev_conf=None):
         """Get specified data
 
         Parameters

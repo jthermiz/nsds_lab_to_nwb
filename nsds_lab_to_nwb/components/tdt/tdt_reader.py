@@ -64,13 +64,17 @@ class TDTReader:
         return meta
 
     def check_stream(self, stream):
-        """Checks to see if user specified stream exists in data
+        """Checks to see if user specified stream (or alternative name) exists in data.
 
-        Args:
-            stream (string): stream name
+        Parameters
+        ----------
+        stream: str
+            Stream name.
 
-        Returns:
-            stream_available (bool): whether stream exisits
+        Returns
+        -------
+        stream: str
+            Stream name updated to the standard name if an alternative was used.
         """
         error_message = f"Device or stream '{stream}' not found. Available streams: ["
         error_message += ", ".join(self.streams)
@@ -82,7 +86,7 @@ class TDTReader:
                 stream = stream_alternatives[stream]
         return stream
 
-    def get_data(self, stream, dev_conf):
+    def get_data(self, *, stream=None, dev_conf=None):
         """Get specified data
 
         Parameters

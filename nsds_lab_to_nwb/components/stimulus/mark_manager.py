@@ -15,7 +15,7 @@ class MarkManager():
             mark_track, meta = mark_file.read_data()
             rate = mark_file.sample_rate
         else:
-            mark_track, meta = TDTReader(self.dataset.tdt_path).get_data('mrk1', None)
+            mark_track, meta = TDTReader(self.dataset.tdt_path).get_data(stream='mrk1')
             rate = meta['sample_rate']
 
         # Create the mark timeseries

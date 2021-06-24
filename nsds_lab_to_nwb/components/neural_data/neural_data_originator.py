@@ -25,7 +25,7 @@ class NeuralDataOriginator():
             if isinstance(dev_conf, str): # skip other annotations
                 continue
 
-            data, metadata = self.neural_data_reader.get_data(device_name, dev_conf)
+            data, metadata = self.neural_data_reader.get_data(stream=device_name, dev_conf=dev_conf)
             if data is None:
                 logger.info(f'No data availble for {device_name}. Skipping...')
             else:
