@@ -16,7 +16,7 @@ class MarkTokenizer():
         elif 'wn' in stim_name:
             self.tokenizer = WNTokenizer(self.block_name, self.stim_configs)
         else:
-            raise ValueError('unknown stimulus type')
+            raise ValueError("Unknown stimulus type '{stim_name}' for mark tokenizer")
 
     def tokenize(self, nwb_content):
         self.tokenizer.tokenize(nwb_content)

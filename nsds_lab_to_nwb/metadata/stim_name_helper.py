@@ -15,3 +15,4 @@ def check_stimulus_name(stim_name_input):
         for alt_name in stim_info['alt_names']:
             if stim_name_input == alt_name:
                 return key, stim_info
+    raise ValueError(f"Stimulus type '{stim_name_input}' not found.")

@@ -19,8 +19,7 @@ os.environ['NSDS_STIMULI_PATH'] = '/clusterfs/NSDS_data/stimuli'
                                           ("RVG16_B07"),
                                           ("RVG16_B08"),
                                           ("RVG16_B09"),
-                                          ("RVG16_B10"),
-                                          ("RVG02_B09")])
+                                          ("RVG16_B10")])
 def test_nwb_builder(tmpdir, block_folder):
     """Runs the NWB pipline on a block."""
     if not os.path.isdir(os.environ['NSDS_DATA_PATH']):

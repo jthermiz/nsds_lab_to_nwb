@@ -94,7 +94,7 @@ class NWBBuilder:
         self.device_originator = DeviceOriginator(self.metadata)
         self.electrode_groups_originator = ElectrodeGroupsOriginator(self.metadata)
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
-        self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata, use_htk=self.use_htk)
+        self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata)
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
 
     def _collect_nwb_metadata(self, block_metadata_path, metadata_lib_path, stim_lib_path):
@@ -109,8 +109,10 @@ class NWBBuilder:
     def _collect_dataset_paths(self):
         # scan data_path and identify relevant subdirectories
         if self.experiment_type == 'auditory':
-            data_scanner = AuditoryDataScanner(self.block_folder, data_path=self.data_path,
-                                               stim_lib_path=self.stim_lib_path)
+            data_scanner = AuditoryDataScanner(self.block_folder,
+                                               data_path=self.data_path,
+                                               stim_lib_path=self.stim_lib_path,
+                                               use_htk=self.use_htk)
         elif self.experiment_type == 'behavior':
             raise ValueError('behavior data not yet supported.')
         else:
@@ -122,8 +124,6 @@ class NWBBuilder:
 
         Parameters
         ----------
-        use_htk: applicable for auditory datasets only.
-                if False, use HTK files. if True, use TDT files directly.
         process_stim: (bool) default is True. optionally skip stimulus processing
                 while developing/testing other features (temporary switch)
 
