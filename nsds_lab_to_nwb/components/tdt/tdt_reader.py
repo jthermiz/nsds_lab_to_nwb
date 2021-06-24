@@ -4,6 +4,9 @@ import tdt
 logger = logging.getLogger(__name__)
 
 
+stream_alternatives = {'ECoG': 'Wave'}
+
+
 class TDTReader:
     """TDT interface
 
@@ -11,12 +14,10 @@ class TDTReader:
     ----------
     path: str
         Path to TDT folder
-    dev_conf: (dict) metadata for the device.
-        nwb_builder.metadata['device'][device_name]. Not used for TDT.
     channels: list, optional
         List of channel ids to import. Defaults to None.
     """
-    def __init__(self, path, dev_conf, channels=None):
+    def __init__(self, path, channels=None):
         self.path = path
         self.channels = channels
 
@@ -49,7 +50,7 @@ class TDTReader:
         Returns:
             meta (dict): dictionary containing stream recording parameters (if no stream returns None)
         """
-        self.check_stream(stream)
+        stream = self.check_stream(stream)
         meta = {}
         meta['sample_rate'] = self.tdt_obj['streams'][stream]['fs']
         meta['channel_ids'] = self.tdt_obj['streams'][stream]['channel']
@@ -71,19 +72,25 @@ class TDTReader:
         Returns:
             stream_available (bool): whether stream exisits
         """
+        error_message = f"Device or stream '{stream}' not found. Available streams: ["
+        error_message += ", ".join(self.streams)
+        error_message += "]"
         if stream not in self.streams:
-            error_message = 'Device or stream not found. Available streams: ['
-            error_message += ', '.join(self.streams)
-            error_message += ']'
-            raise ValueError(error_message)
+            if stream not in stream_alternatives.keys():
+                raise ValueError(error_message)
+            else:
+                stream = stream_alternatives[stream]
+        return stream
 
-    def get_data(self, stream):
+    def get_data(self, stream, dev_conf):
         """Get specified data
 
         Parameters
         ----------
         stream: str
             Stream name
+        dev_conf: (dict) metadata for the device.
+            nwb_builder.metadata['device'][device_name]. Not used for TDT.
 
         Returns
         -------
@@ -92,7 +99,7 @@ class TDTReader:
         meta: dict
             Meta data for the data array.
         """
-        self.check_stream(stream)
+        stream = self.check_stream(stream)
         data = self.tdt_obj['streams'][stream]['data'].T
         meta = self.get_metadata(stream)
         return data, meta
