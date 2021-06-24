@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class NeuralDataOriginator():
-    def __init__(self, dataset, metadata, use_htk=False):
+    def __init__(self, dataset, metadata):
         self.dataset = dataset      # this should have all relavant paths
         self.metadata = metadata    # this should have all relevant metadata
 
-        if use_htk:
+        if hasattr(self.dataset, 'htk_mark_path'):
             logger.info('Using HTK')
             self.neural_data_reader = HTKReader(self.dataset.htk_path)
         else:
@@ -34,7 +34,7 @@ class NeuralDataOriginator():
                                             data=data,
                                             electrodes=electrode_table_region,
                                             starting_time=0.,
-                                            rate=metadata['sampling_rate'],
+                                            rate=metadata['sample_rate'],
                                             )
                 logger.info(f'Adding {device_name} data NWB...')
                 nwb_content.add_acquisition(e_series)
