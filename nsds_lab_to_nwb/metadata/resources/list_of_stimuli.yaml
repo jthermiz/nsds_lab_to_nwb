@@ -60,3 +60,10 @@ baseline:
     audio_path: ''
     marker_path: ''
     parameter_path: ''
+
+nan:
+    alt_names: []
+    description: ''
+    audio_path: ''
+    marker_path: ''
+    parameter_path: ''
