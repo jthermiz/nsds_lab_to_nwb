@@ -99,16 +99,55 @@ class MetadataReader:
                     )
 
     def extra_cleanup(self):
-        # device
         device_metadata = self.metadata_input['device']
-        ecog_lat_loc = device_metadata['ECoG'].pop('ecog_lat_loc', None)
-        ecog_post_loc = device_metadata['ECoG'].pop('ecog_post_loc', None)
-        if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
-            device_metadata['ECoG']['location_details'] = (
-                f'{ecog_lat_loc} mm from lateral ridge '
-                f'and {ecog_post_loc} mm from posterior ridge.'
-                )
-        device_metadata['Poly']['location_details'] = 'Within the ECoG grid.'   # fixed
+        block_meta = self.metadata_input['block_meta']
+
+        # if a device was not actually used in this block, drop the corresponding metadata
+        default_value = False
+        has_ecog = self.__convert_bool(block_meta.get('has_ecog', default_value))
+        has_poly = self.__convert_bool(block_meta.get('has_poly', default_value))
+        if not has_ecog:
+            device_metadata.pop('ECoG')
+        if not has_poly:
+            device_metadata.pop('Poly')
+
+        # device location metadata
+        if has_ecog:
+            ecog_lat_loc = device_metadata['ECoG'].pop('ecog_lat_loc', None)
+            ecog_post_loc = device_metadata['ECoG'].pop('ecog_post_loc', None)
+            if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
+                device_metadata['ECoG']['location_details'] = (
+                    f'{ecog_lat_loc} mm from lateral ridge '
+                    f'and {ecog_post_loc} mm from posterior ridge.'
+                    )
+        if has_poly:
+            device_metadata['Poly']['location_details'] = 'Within the ECoG grid.'
+
+    def __convert_bool(self, s):
+        """Convert a True/False text (string) to a boolean value.
+
+        Parameters
+        ---------
+        s : bool, str or int
+            Something equivalent to True or False.
+
+        Returns
+        -------
+        A corresponding boolean variable.
+        """
+        if isinstance(s, bool):
+            return s
+        if isinstance(s, int):
+            return bool(s)
+        if not isinstance(s, str):
+            raise TypeError('Allowed types are bool, int or string.')
+
+        # simply search from a word pool
+        if s.lower() in ['true', '1', 't', 'y', 'yes']:
+            return True
+        if s.lower() in ['false', '0', 'f', 'n', 'no']:
+            return False
+        raise ValueError('Cannot convert \'{}\' to boolean.'.format(s))
 
 
 class LegacyMetadataReader(MetadataReader):
