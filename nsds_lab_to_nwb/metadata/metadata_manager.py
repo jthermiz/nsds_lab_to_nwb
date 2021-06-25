@@ -321,10 +321,10 @@ class MetadataManager:
     def __check_subject(self, metadata):
         if 'subject' not in metadata:
             metadata['subject'] = {}
-        if 'subject id' not in metadata['subject']:
-            metadata['subject']['subject id'] = self.animal_name
+        if 'subject_id' not in metadata['subject']:
+            metadata['subject']['subject_id'] = self.animal_name
         if 'species' not in metadata['subject']:
-            if metadata['subject']['subject id'][0] == 'R':
+            if metadata['subject']['subject_id'][0] == 'R':
                 metadata['subject']['species'] = 'Rat'
         for key in ('description', 'genotype', 'sex'):
             if key not in metadata['subject']:

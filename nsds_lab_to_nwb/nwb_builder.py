@@ -146,7 +146,7 @@ class NWBBuilder:
             session_id=block_name,
             experiment_description=self.metadata['experiment_description'],
             subject=Subject(
-                subject_id=self.metadata['subject']['subject id'],
+                subject_id=self.metadata['subject']['subject_id'],
                 description=self.metadata['subject']['description'],
                 genotype=self.metadata['subject']['genotype'],
                 sex=self.metadata['subject']['sex'],
