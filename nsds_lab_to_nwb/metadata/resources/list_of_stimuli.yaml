@@ -22,8 +22,8 @@ tone150:
 timit:
     alt_names: ['Timit998']
     description: ''
-    audio_path: 'TIMIT/timit998s.wav'
-    marker_path: 'TIMIT/timit998m.wav.wav'
+    audio_path: 'TIMIT/timit998/timit998s.wav'
+    marker_path: 'TIMIT/timit998/timit998m.wav'
     parameter_path: 'TIMIT/timit998/timit998.mat'
 
 tone:
