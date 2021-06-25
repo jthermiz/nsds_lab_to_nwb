@@ -23,7 +23,7 @@ class SessionTimeExtractor():
         return current_time
 
     def get_session_start_time(self):
-        if 'session_start_time' in self.metadata:
+        if self.metadata.get('session_start_time', None) is not None:
             logger.info('Extracting session_start_time from metadata input...')
             return self._validate_time(self.metadata['session_start_time'])
 
