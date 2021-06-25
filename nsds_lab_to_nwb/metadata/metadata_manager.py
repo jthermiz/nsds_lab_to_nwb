@@ -95,7 +95,8 @@ class MetadataReader:
                 device_metadata[key]['imp'] = np.nan
             if 'filtering' not in device_metadata[key]:
                 device_metadata[key]['filtering'] = (
-                    'Low-Pass Filtered to Nyquist frequency'    # confirm!
+                    'The signal is low pass filtered at 45 percent of the sample rate, '
+                    'and high pass filtered at 2 Hz.'
                     )
 
     def extra_cleanup(self):
