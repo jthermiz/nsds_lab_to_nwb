@@ -70,6 +70,13 @@ class MetadataReader:
         if 'subject' not in self.metadata_input:
             self.metadata_input['subject'] = {}
 
+        # fix subject weight unit - always 'g' in our case
+        subject_metadata = self.metadata_input['subject']
+        if 'weight' in subject_metadata:
+            weight = str(subject_metadata['weight'])
+            if weight[-1] != 'g':
+                subject_metadata['weight'] = f'{weight}g'
+
         if 'session_description' not in self.metadata_input:
             try:
                 self.metadata_input['session_description'] = self.metadata_input['stimulus']['name']
@@ -327,7 +334,7 @@ class MetadataManager:
         if 'species' not in metadata['subject']:
             if metadata['subject']['subject_id'][0] == 'R':
                 metadata['subject']['species'] = 'Rat'
-        for key in ('description', 'genotype', 'sex'):
+        for key in ('description', 'genotype', 'sex', 'weight'):
             if key not in metadata['subject']:
                 metadata['subject'][key] = 'Unknown'
 
