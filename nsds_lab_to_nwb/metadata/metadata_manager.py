@@ -367,3 +367,9 @@ class MetadataManager:
                     f'{nchannels}-ch {key} '
                     # f'({device_type}) '
                     f'from {manufacturer}')
+
+                # add device location if not already specified
+                if ('location' not in device_metadata[key] or
+                        len(device_metadata[key]['location']) == 0):
+                    if self.experiment_type == 'auditory':
+                        device_metadata[key]['location'] = 'AUD'
