@@ -10,3 +10,4 @@ Components API
    stimulus
    htk
    tdt
+   time
