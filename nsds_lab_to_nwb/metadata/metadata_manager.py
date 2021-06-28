@@ -77,7 +77,7 @@ class MetadataReader:
         subject_metadata = self.metadata_input['subject']
         if 'weight' in subject_metadata:
             weight = str(subject_metadata['weight'])
-            if weight[-1] != 'g':
+            if 'g' not in weight:
                 subject_metadata['weight'] = f'{weight}g'
 
         if 'session_description' not in self.metadata_input:
