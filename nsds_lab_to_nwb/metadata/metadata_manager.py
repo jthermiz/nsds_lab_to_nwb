@@ -9,6 +9,7 @@ from nsds_lab_to_nwb.utils import (get_metadata_lib_path, get_stim_lib_path,
 from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
 from nsds_lab_to_nwb.metadata.exp_note_reader import ExpNoteReader
 from nsds_lab_to_nwb.metadata.keymap_helper import apply_keymap
+from nsds_lab_to_nwb.metadata.resources import read_metadata_resource
 from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 
 
@@ -29,6 +30,7 @@ class MetadataReader:
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
         self.block_folder = block_folder
+        _, self.animal_name, _ = split_block_folder(block_folder)
         self.metadata_save_path = metadata_save_path
 
     def read(self):
@@ -69,6 +71,7 @@ class MetadataReader:
         '''
         if 'subject' not in self.metadata_input:
             self.metadata_input['subject'] = {}
+            self.metadata_input['subject']['subject_id'] = self.animal_name
 
         # fix subject weight unit - always 'g' in our case
         subject_metadata = self.metadata_input['subject']
@@ -194,14 +197,11 @@ class LegacyMetadataReader(MetadataReader):
                                            keymap_file='metadata_keymap_legacy')
 
     def extra_cleanup(self):
-        # fill in subject information (common for all old rats, except weight)
-        old_subject_metadata = {
-            'sex': 'F',
-            'species': 'Sprague Dawley',
-            'genotype': 'Wild type',
-            'description': 'Charles River',
-            'weight': 'TODO',
-            }
+        # fill in old subject information
+        old_subject_input = read_metadata_resource('old_subject_metadata')
+        old_subject_metadata = old_subject_input['subject_metadata']
+        old_subject_metadata['weight'] = old_subject_input['weights'].get(
+                                                    self.animal_name, 'Unknown')
         for key in old_subject_metadata:
             if key not in self.metadata_input['subject']:
                 self.metadata_input['subject'][key] = old_subject_metadata[key]

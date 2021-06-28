@@ -1,0 +1,75 @@
+# for legacy experiments - should eventually move to the metadata repo
+
+# ref: this issue comment
+# https://github.com/BouchardLab/nsds_lab_to_nwb/issues/47#issuecomment-860938211
+subject_metadata:
+    sex: F
+    species: Sprague Dawley
+    genotype: Wild type
+    description: Charles River
+
+# weights copied from this google doc
+# https://docs.google.com/spreadsheets/d/1EUythTt9ZAhZ4KvNTkUyU8oeS5j_CLifHYRFZ0inAXI/edit#gid=0
+# as in issue https://github.com/BouchardLab/nsds_lab_to_nwb/issues/47#issuecomment-860936765
+weights:
+    R39: 250g
+    R40: 470g
+    R41: 300g
+    R42: 350g
+    R43: 350g
+    R44: 262g
+    R45: 256g
+    R47: 330g
+    R48: 325g
+    R49: 390g
+    R50: 350g
+    R51: 360g
+    R52: 365g
+    R53: 340g
+    R54: 340g
+    R55: 470g
+    R56: 230g
+    R63: 275g
+    R64: 300g
+    R65: 320g
+    R66: 290g
+    R67: 280g
+    R68: 300g
+    R69: 325g
+    R70: 315g
+    RM1: 475g
+    RM2: 515g
+    RM3: 495g
+    RM4: 610g
+    R71: 300g
+    R72: 270g
+    R73: 290g
+    RM7: 425g
+    RM5: 450g
+    R74: 300g
+    R75: 290g
+    R76: 350g
+    R77: 260g
+    R78: 265g
+    R79: 280g
+    R80: 320g
+    R81: 310g
+    R82: 305g
+    R83: 360g
+    R84: 280g
+    #R85 /86 "Maude"	300g
+    R85: 300g
+    R86: 300g
+    R87: 320g
+    R88: 390g
+    R89: 360g
+    R90: 360g
+    R91: 270g
+    R92: 310g
+    R93: 305g
+    R94: 315g
+    R95: 360g
+    R96: 320g
+    R97: 240g
+    R98: 260g
+    R99: 285g
