@@ -114,7 +114,7 @@ class NWBBuilder:
 
     def _extract_session_start_time(self):
         if self.use_htk:
-            logger.info(f' - Using a dummy session_start_time (HTK pipeline)')
+            logger.info(' - Using a dummy session_start_time (HTK pipeline)')
             return get_default_time()
 
         # extract from TDT data
