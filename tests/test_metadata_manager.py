@@ -1,5 +1,3 @@
-import os
-import numpy as np
 import unittest
 
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
@@ -23,8 +21,6 @@ class TestCase_MetadataManager(unittest.TestCase):
 
     def test_metadata_manager_case2_new_data(self):
         ''' detect/collect metadata needed to build the NWB file '''
-        # block_name = 'RVG02_B09'
-        # block_metadata_path = '_data/RVG02/block_data.csv'
         block_name = 'RVG16_B01'
         block_metadata_path = '_data/RVG16/RVG16_B01.yaml'
         nwb_metadata = MetadataManager(block_folder=block_name,
@@ -33,6 +29,7 @@ class TestCase_MetadataManager(unittest.TestCase):
                                        metadata_save_path=self.metadata_save_path,
                                        legacy_block=False)
         nwb_metadata.extract_metadata()
+
 
 if __name__ == '__main__':
     unittest.main()

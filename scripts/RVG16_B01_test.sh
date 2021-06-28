@@ -1,0 +1,7 @@
+#!/bin/bash
+
+SAVE_PATH="_test/"
+BLOCK_NAME="RVG16_B01"
+BLOCK_META="${NSDS_DATA_PATH}/RVG16/RVG16_B01/RVG16_B01.yaml"
+
+python generate_nwb.py  $SAVE_PATH $BLOCK_NAME $BLOCK_META

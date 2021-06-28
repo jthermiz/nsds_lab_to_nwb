@@ -1,7 +1,5 @@
-import importlib.resources
-import os
-
 from nsds_lab_to_nwb.common.io import read_yaml
+from nsds_lab_to_nwb.metadata.resources import read_metadata_resource
 
 def _remap_and_inject(metadata_parsed, old_key, value, mapto=None):
     if mapto is None:
@@ -25,8 +23,7 @@ def _remap_and_inject(metadata_parsed, old_key, value, mapto=None):
         target = target[new_key]
 
 def apply_keymap(metadata_input, keymap_file='metadata_keymap', key_for_unknown='other'):
-    with importlib.resources.path('nsds_lab_to_nwb.metadata.resources', f'{keymap_file}.yaml') as data_path:
-        keymap = read_yaml(data_path)
+    keymap = read_metadata_resource(keymap_file)
 
     metadata_parsed = {}
     for key, value in metadata_input.items():

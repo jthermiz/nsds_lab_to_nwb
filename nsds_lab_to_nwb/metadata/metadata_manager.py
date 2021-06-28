@@ -9,6 +9,7 @@ from nsds_lab_to_nwb.utils import (get_metadata_lib_path, get_stim_lib_path,
 from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
 from nsds_lab_to_nwb.metadata.exp_note_reader import ExpNoteReader
 from nsds_lab_to_nwb.metadata.keymap_helper import apply_keymap
+from nsds_lab_to_nwb.metadata.resources import read_metadata_resource
 from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 
 
@@ -29,6 +30,7 @@ class MetadataReader:
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
         self.block_folder = block_folder
+        _, self.animal_name, _ = split_block_folder(block_folder)
         self.metadata_save_path = metadata_save_path
 
     def read(self):
@@ -69,6 +71,14 @@ class MetadataReader:
         '''
         if 'subject' not in self.metadata_input:
             self.metadata_input['subject'] = {}
+            self.metadata_input['subject']['subject_id'] = self.animal_name
+
+        # fix subject weight unit - always 'g' in our case
+        subject_metadata = self.metadata_input['subject']
+        if 'weight' in subject_metadata:
+            weight = str(subject_metadata['weight'])
+            if 'g' not in weight:
+                subject_metadata['weight'] = f'{weight}g'
 
         if 'session_description' not in self.metadata_input:
             try:
@@ -95,20 +105,60 @@ class MetadataReader:
                 device_metadata[key]['imp'] = np.nan
             if 'filtering' not in device_metadata[key]:
                 device_metadata[key]['filtering'] = (
-                    'Low-Pass Filtered to Nyquist frequency'    # confirm!
+                    'The signal is low pass filtered at 45 percent of the sample rate, '
+                    'and high pass filtered at 2 Hz.'
                     )
 
     def extra_cleanup(self):
-        # device
         device_metadata = self.metadata_input['device']
-        ecog_lat_loc = device_metadata['ECoG'].pop('ecog_lat_loc', None)
-        ecog_post_loc = device_metadata['ECoG'].pop('ecog_post_loc', None)
-        if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
-            device_metadata['ECoG']['location_details'] = (
-                f'{ecog_lat_loc} mm from lateral ridge '
-                f'and {ecog_post_loc} mm from posterior ridge.'
-                )
-        device_metadata['Poly']['location_details'] = 'Within the ECoG grid.'   # fixed
+        block_meta = self.metadata_input['block_meta']
+
+        # if a device was not actually used in this block, drop the corresponding metadata
+        default_value = False
+        has_ecog = self.__convert_bool(block_meta.get('has_ecog', default_value))
+        has_poly = self.__convert_bool(block_meta.get('has_poly', default_value))
+        if not has_ecog:
+            device_metadata.pop('ECoG')
+        if not has_poly:
+            device_metadata.pop('Poly')
+
+        # device location metadata
+        if has_ecog:
+            ecog_lat_loc = device_metadata['ECoG'].pop('ecog_lat_loc', None)
+            ecog_post_loc = device_metadata['ECoG'].pop('ecog_post_loc', None)
+            if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
+                device_metadata['ECoG']['location_details'] = (
+                    f'{ecog_lat_loc} mm from lateral ridge '
+                    f'and {ecog_post_loc} mm from posterior ridge.'
+                    )
+        if has_poly:
+            device_metadata['Poly']['location_details'] = 'Within the ECoG grid.'
+
+    def __convert_bool(self, s):
+        """Convert a True/False text (string) to a boolean value.
+
+        Parameters
+        ---------
+        s : bool, str or int
+            Something equivalent to True or False.
+
+        Returns
+        -------
+        A corresponding boolean variable.
+        """
+        if isinstance(s, bool):
+            return s
+        if isinstance(s, int):
+            return bool(s)
+        if not isinstance(s, str):
+            raise TypeError('Allowed types are bool, int or string.')
+
+        # simply search from a word pool
+        if s.lower() in ['true', '1', 't', 'y', 'yes']:
+            return True
+        if s.lower() in ['false', '0', 'f', 'n', 'no']:
+            return False
+        raise ValueError('Cannot convert \'{}\' to boolean.'.format(s))
 
 
 class LegacyMetadataReader(MetadataReader):
@@ -147,6 +197,15 @@ class LegacyMetadataReader(MetadataReader):
                                            keymap_file='metadata_keymap_legacy')
 
     def extra_cleanup(self):
+        # fill in old subject information
+        old_subject_input = read_metadata_resource('old_subject_metadata')
+        old_subject_metadata = old_subject_input['subject_metadata']
+        old_subject_metadata['weight'] = old_subject_input['weights'].get(
+                                                    self.animal_name, 'Unknown')
+        for key in old_subject_metadata:
+            if key not in self.metadata_input['subject']:
+                self.metadata_input['subject'][key] = old_subject_metadata[key]
+
         # put bad_chs to right places
         bad_chs_dict = self.metadata_input['device'].pop('bad_chs', None)
         if bad_chs_dict is not None:
@@ -282,12 +341,12 @@ class MetadataManager:
     def __check_subject(self, metadata):
         if 'subject' not in metadata:
             metadata['subject'] = {}
-        if 'subject id' not in metadata['subject']:
-            metadata['subject']['subject id'] = self.animal_name
+        if 'subject_id' not in metadata['subject']:
+            metadata['subject']['subject_id'] = self.animal_name
         if 'species' not in metadata['subject']:
-            if metadata['subject']['subject id'][0] == 'R':
+            if metadata['subject']['subject_id'][0] == 'R':
                 metadata['subject']['species'] = 'Rat'
-        for key in ('description', 'genotype', 'sex'):
+        for key in ('description', 'genotype', 'sex', 'weight'):
             if key not in metadata['subject']:
                 metadata['subject'][key] = 'Unknown'
 
@@ -320,3 +379,9 @@ class MetadataManager:
                     f'{nchannels}-ch {key} '
                     # f'({device_type}) '
                     f'from {manufacturer}')
+
+                # add device location if not already specified
+                if ('location' not in device_metadata[key] or
+                        len(device_metadata[key]['location']) == 0):
+                    if self.experiment_type == 'auditory':
+                        device_metadata[key]['location'] = 'AUD'

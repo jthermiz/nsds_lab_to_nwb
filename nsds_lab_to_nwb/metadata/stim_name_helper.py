@@ -1,11 +1,8 @@
-import importlib.resources
-import os
-
 from nsds_lab_to_nwb.common.io import read_yaml
+from nsds_lab_to_nwb.metadata.resources import read_metadata_resource
 
 def check_stimulus_name(stim_name_input):
-    with importlib.resources.path('nsds_lab_to_nwb.metadata.resources', 'list_of_stimuli.yaml') as data_path:
-        stim_directory = read_yaml(data_path)
+    stim_directory = read_metadata_resource('list_of_stimuli')
 
     if stim_name_input in stim_directory.keys():
         # if there is a matching key, just read the corresponding entry
