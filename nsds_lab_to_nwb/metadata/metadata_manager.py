@@ -194,6 +194,18 @@ class LegacyMetadataReader(MetadataReader):
                                            keymap_file='metadata_keymap_legacy')
 
     def extra_cleanup(self):
+        # fill in subject information (common for all old rats, except weight)
+        old_subject_metadata = {
+            'sex': 'F',
+            'species': 'Sprague Dawley',
+            'genotype': 'Wild type',
+            'description': 'Charles River',
+            'weight': 'TODO',
+            }
+        for key in old_subject_metadata:
+            if key not in self.metadata_input['subject']:
+                self.metadata_input['subject'][key] = old_subject_metadata[key]
+
         # put bad_chs to right places
         bad_chs_dict = self.metadata_input['device'].pop('bad_chs', None)
         if bad_chs_dict is not None:
