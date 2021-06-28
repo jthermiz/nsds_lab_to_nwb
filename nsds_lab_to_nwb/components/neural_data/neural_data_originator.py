@@ -22,34 +22,34 @@ class NeuralDataOriginator():
         else:
             logger.info('Using TDT')
             self.neural_data_reader = TDTReader(self.dataset.tdt_path)
-            
-    def make_description(self, device_name):       
-            description = self.metadata['experiment_description']
-            description += '. Recordings from {0:s} sampled at {1:f} Hz.'.format(device_name, 
-                                                        self.hardware_rate)
-            if self.resample_flag:
-                description += ' Then resampled down to {0:d} Hz'.format(int(self.resample_rate))
-            return description
-    
-    def resample(self, data):        
-        #only resample if rate is not at nearest kHz
+
+    def make_description(self, device_name):
+        description = self.metadata['experiment_description']
+        description += '. Recordings from {0:s} sampled at {1:f} Hz.'.format(device_name,
+                                                                             self.hardware_rate)
+        if self.resample_flag:
+            description += ' Then resampled down to {0:d} Hz'.format(int(self.resample_rate))
+        return description
+
+    def resample(self, data):
+        # only resample if rate is not at nearest kHz
         rate = self.hardware_rate
-        if (rate/1000 % 1) > 0:            
-            new_freq = (rate//1000)*1000
+        if (rate / 1000 % 1) > 0:
+            new_freq = (rate // 1000) * 1000
             new_data = resample(data, new_freq, rate)
             self.resample_rate = new_freq
             return new_data
         else:
-            #no need to resample, already at nearest kHz
-            self.resample_flag = False 
+            # no need to resample, already at nearest kHz
+            self.resample_flag = False
             return data
-        
+
     def _get_rate(self):
         if self.resample_rate is None:
             rate = self.hardware_rate
         else:
             rate = self.resample_rate
-        return rate*1.0
+        return rate * 1.0
 
     def make(self, nwb_content, electrode_table_regions):
         for device_name, dev_conf in self.metadata['device'].items():
@@ -59,18 +59,18 @@ class NeuralDataOriginator():
             data, metadata = self.neural_data_reader.get_data(stream=device_name, dev_conf=dev_conf)
             if data is None:
                 logger.info(f'No data availble for {device_name}. Skipping...')
-            else:    
-                
-                #resample data
+            else:
+
+                # resample data
                 self.hardware_rate = metadata['sample_rate']
                 if self.resample_flag:
-                    data = self.resample(data)                
-                
-                #make description
+                    data = self.resample(data)
+
+                # make description
                 description = self.make_description(device_name)
-                
+
                 electrode_table_region = electrode_table_regions[device_name]
-                e_series = ElectricalSeries(name=device_name,                                            
+                e_series = ElectricalSeries(name=device_name,
                                             data=data,
                                             electrodes=electrode_table_region,
                                             starting_time=0.,
