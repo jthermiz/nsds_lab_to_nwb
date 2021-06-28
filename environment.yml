@@ -31,3 +31,4 @@ dependencies:
     - sphinx-rtd-theme
     - sphinx-gallery
     - pytest-xdist
+    - process_nwb
