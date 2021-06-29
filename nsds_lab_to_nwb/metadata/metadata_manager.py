@@ -128,8 +128,7 @@ class MetadataReader:
             if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
                 device_metadata['ECoG']['location_details'] = (
                     f'Located {ecog_lat_loc} mm from lateral ridge '
-                    f'and {ecog_post_loc} mm from posterior ridge.'
-                    )
+                    f'and {ecog_post_loc} mm from posterior ridge.')
         if has_poly:
             device_metadata['Poly']['location_details'] = 'Located within the ECoG grid.'
 
@@ -209,15 +208,6 @@ class LegacyMetadataReader(MetadataReader):
         if bad_chs_dict is not None:
             for dev_name, bad_chs in bad_chs_dict.items():
                 self.metadata_input['device'][dev_name]['bad_chs'] = bad_chs
-
-        # keep poly_neighbors information
-        poly_neighbors = self.metadata_input['device']['ECoG'].pop('poly_neighbors', None)
-        if poly_neighbors is not None:
-            # CAVEAT: actually these ch_ids indices are not kept in the NWB...
-            location_details = "poly_neighbors=["
-            location_details += (", ".join([str(pn) for pn in poly_neighbors])).rstrip(', ')
-            location_details += "]. "
-            self.metadata_input['device']['ECoG']['location_details'] = location_details
 
         # final touches...
         if self.experiment_type == 'auditory':
@@ -391,6 +381,16 @@ class MetadataManager:
                 # (using device_metadata['Poly']['poly_ap_loc']
                 # and device_metadata['Poly']['poly_dev_loc'])
 
+                # keep poly_neighbors information, after channel remapping
+                poly_neighbors = dev_conf.pop('poly_neighbors', None)
+                if poly_neighbors is not None:
+                    # apply ch_map, and flatten to a text description
+                    location_details = "poly_neighbors=["
+                    location_details += (", ".join([str(ch_map[pn]['electrode_id'])
+                                                    for pn in poly_neighbors])).rstrip(', ')
+                    location_details += "]. "
+                    dev_conf['location_details'] += location_details
+
                 basic_description = f"{dev_conf.pop('nchannels')}-ch {key}"
 
                 # for new data only
@@ -411,8 +411,7 @@ class MetadataManager:
                     f"orientation={dev_conf.pop('orientation')}, "
                     f"xspacing={dev_conf.pop('xspacing', '(unknown)')}mm, "
                     f"yspacing={dev_conf.pop('yspacing', '(unknown)')}mm, "
-                    f"prefix={dev_conf['prefix']}."
-                    )
+                    f"prefix={dev_conf['prefix']}.")
                 dev_conf['descriptions']['electrode_group_description'] = (
                     f"{basic_description}. "
                     f"{dev_conf.pop('location_details')}").strip()
