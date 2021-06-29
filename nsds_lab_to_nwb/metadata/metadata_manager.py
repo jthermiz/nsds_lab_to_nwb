@@ -207,6 +207,15 @@ class LegacyMetadataReader(MetadataReader):
             for dev_name, bad_chs in bad_chs_dict.items():
                 self.metadata_input['device'][dev_name]['bad_chs'] = bad_chs
 
+        # keep poly_neighbors information
+        poly_neighbors = self.metadata_input['device']['ECoG'].pop('poly_neighbors', None)
+        if poly_neighbors is not None:
+            # CAVEAT: actually these ch_ids indices are not kept in the NWB...
+            location_details = "poly_neighbors=["
+            location_details += (", ".join([str(pn) for pn in poly_neighbors])).rstrip(', ')
+            location_details += "]. "
+            self.metadata_input['device']['ECoG']['location_details'] = location_details
+
         # final touches...
         if self.experiment_type == 'auditory':
             self.metadata_input['experiment_description'] = 'Auditory experiment'
