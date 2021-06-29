@@ -35,8 +35,10 @@ class NeuralDataOriginator():
         if 'bad_chs' not in dev_conf:
             return ''
 
+        ch_map = dev_conf['ch_map']
         comments = 'bad_channels=['
-        comments += (", ".join([str(ch) for ch in dev_conf['bad_chs']])).rstrip(', ')
+        comments += (", ".join([str(ch_map[i]['electrode_id'])  # re-map channels
+                                for i in dev_conf['bad_chs']])).rstrip(', ')
         comments += "]"
         return comments
 
