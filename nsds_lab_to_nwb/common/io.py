@@ -2,6 +2,7 @@ import io
 import json
 import yaml
 import csv
+from collections import OrderedDict
 
 
 # --- yaml ---
@@ -12,6 +13,9 @@ class MyDumper(yaml.Dumper):
 
 def write_yaml(yml_path, data, access_mode='w', default_flow_style=False, sort_keys=False):
     # note: additional kwargs may not work in older versions of pyyaml
+    # add representer for OrderedDict
+    yaml.add_representer(OrderedDict,
+        lambda dumper, data: dumper.represent_mapping('tag:yaml.org,2002:map', data.items()))
     with io.open(yml_path, access_mode) as fh:
         yaml.dump(data, fh,
                   Dumper=MyDumper,
