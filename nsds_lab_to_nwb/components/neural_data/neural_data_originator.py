@@ -1,8 +1,8 @@
 import logging.config
 from pynwb.ecephys import ElectricalSeries
 
-from nsds_lab_to_nwb.components.htk.htk_reader import HTKReader
-from nsds_lab_to_nwb.components.tdt.tdt_reader import TDTReader
+from nsds_lab_to_nwb.tools.htk.htk_reader import HTKReader
+from nsds_lab_to_nwb.tools.tdt.tdt_reader import TDTReader
 from process_nwb.resample import resample
 
 logger = logging.getLogger(__name__)
