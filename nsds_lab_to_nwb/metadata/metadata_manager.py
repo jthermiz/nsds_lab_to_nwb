@@ -361,8 +361,7 @@ class MetadataManager:
                 if isinstance(value, str):
                     device_metadata[key] = {'name': value}
                 dev_conf = device_metadata[key]
-                probe_name = dev_conf['name']
-                probe_path = os.path.join(self.yaml_lib_path, 'probe', probe_name + '.yaml')
+                probe_path = os.path.join(self.yaml_lib_path, 'probe', dev_conf['name'] + '.yaml')
                 dev_conf.update(read_yaml(probe_path))
 
                 # replace ch_ids and ch_pos with a single ch_map (OrderedDict)
@@ -381,7 +380,18 @@ class MetadataManager:
                 # (using device_metadata['Poly']['poly_ap_loc']
                 # and device_metadata['Poly']['poly_dev_loc'])
 
-                # keep poly_neighbors information, after channel remapping
+                # set up device descriptions;
+                # prepare two versions for device and e-group
+                basic_description = f"{dev_conf.pop('nchannels')}-ch {key}"
+                # for new data only
+                extra_device_description = ""
+                if 'serial' in dev_conf:
+                    extra_device_description += f"serial={dev_conf.pop('serial')}. "
+                if 'acq' in dev_conf:
+                    extra_device_description += (
+                        f"acq={dev_conf.pop('acq').replace(' ', '-')}. ")
+
+                # keep poly_neighbors, if applicable, after channel remapping
                 poly_neighbors = dev_conf.pop('poly_neighbors', None)
                 if poly_neighbors is not None:
                     # apply ch_map, and flatten to a text description
@@ -390,16 +400,6 @@ class MetadataManager:
                                                     for pn in poly_neighbors])).rstrip(', ')
                     location_details += "]. "
                     dev_conf['location_details'] += location_details
-
-                basic_description = f"{dev_conf.pop('nchannels')}-ch {key}"
-
-                # for new data only
-                extra_device_description = ""
-                if 'serial' in dev_conf:
-                    extra_device_description += f"serial={dev_conf.pop('serial')}. "
-                if 'acq' in dev_conf:
-                    extra_device_description += (
-                        f"acq={dev_conf.pop('acq').replace(' ', '-')}. ")
 
                 dev_conf['descriptions'] = {} # ignore existing placeholder text
                 dev_conf['descriptions']['device_description'] = (
