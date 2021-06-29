@@ -1,6 +1,9 @@
 import logging
 import os
 import numpy as np
+import itertools
+from collections import OrderedDict
+
 from nsds_lab_to_nwb.utils import (get_metadata_lib_path, get_stim_lib_path,
                                    split_block_folder)
 
@@ -362,6 +365,7 @@ class MetadataManager:
         stimulus_metadata.update(read_yaml(stim_yaml_path))
 
     def __load_probes(self, device_metadata):
+        e_id_gen = itertools.count()    # Electrode ID, unique for channels across devices
         for key, value in device_metadata.items():
             if key in ('ECoG', 'Poly'):
                 if isinstance(value, str):
@@ -369,7 +373,19 @@ class MetadataManager:
                 dev_conf = device_metadata[key]
                 probe_name = dev_conf['name']
                 probe_path = os.path.join(self.yaml_lib_path, 'probe', probe_name + '.yaml')
-                device_metadata[key].update(read_yaml(probe_path))
+                dev_conf.update(read_yaml(probe_path))
+
+                # replace ch_ids and ch_pos with a single ch_map (OrderedDict)
+                ch_ids = dev_conf.pop('ch_ids')
+                ch_pos = dev_conf.pop('ch_pos')
+                ch_map = OrderedDict()
+                for i in ch_ids:
+                    e_id = next(e_id_gen)
+                    ch_map[i] = {'electrode_id': e_id,
+                                 'x': ch_pos[str(i)]['x'],
+                                 'y': ch_pos[str(i)]['y'],
+                                 'z': ch_pos[str(i)]['z']}
+                dev_conf['ch_map'] = ch_map
 
                 # TODO/CONSIDER: apply offset to all poly ch_pos systematically?
                 # (using device_metadata['Poly']['poly_ap_loc']
