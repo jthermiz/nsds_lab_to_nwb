@@ -6,9 +6,28 @@ class ElectrodesOriginator():
         self.metadata = metadata
 
     def make(self, nwb_content):
+        self.__create_devices(nwb_content)
+        self.__create_electrode_groups(nwb_content)
         device_electrode_regions = self.__add_electrodes(nwb_content)
         electrode_table_regions = self.__create_electrode_table_regions(nwb_content, device_electrode_regions)
         return electrode_table_regions
+
+    def __create_devices(self, nwb_content):
+        ''' create devices '''
+        for device_name, dev_conf in self.metadata['device'].items():
+            if isinstance(dev_conf, str): #Skip mark and audio,
+                continue
+            device = nwb_content.create_device(name=device_name,
+                                               manufacturer=dev_conf['manufacturer'])
+
+    def __create_electrode_groups(self, nwb_content):
+        ''' create electrode groups '''
+        for device_name, device in nwb_content.devices.items():
+            e_group = nwb_content.create_electrode_group(
+                name=device_name,
+                description=self.metadata['device'][device_name]['description'],
+                location=self.metadata['device'][device_name]['location'],
+                device=device)
 
     def __add_electrodes(self, nwb_content):
         device_electrode_regions = {}
