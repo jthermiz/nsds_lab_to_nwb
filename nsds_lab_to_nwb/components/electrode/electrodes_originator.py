@@ -18,8 +18,10 @@ class ElectrodesOriginator():
             if not isinstance(dev_conf, dict):
                 # skip any extra items in metadata
                 continue
-            device = nwb_content.create_device(name=device_name,
-                                               manufacturer=dev_conf['manufacturer'])
+            device = nwb_content.create_device(
+                name=device_name,
+                description=dev_conf['descriptions']['device_description'],
+                manufacturer=dev_conf['manufacturer'])
 
     def __create_electrode_groups(self, nwb_content):
         ''' create electrode groups '''
@@ -29,9 +31,9 @@ class ElectrodesOriginator():
             dev_conf = self.metadata['device'][device_name]
             e_group = nwb_content.create_electrode_group(
                 name=device_name,
-                description=dev_conf['description'],
-                location=dev_conf['location'],
-                device=device)
+                device=device,
+                description=dev_conf['descriptions']['electrode_group_description'],
+                location=dev_conf['location'])
 
     def __add_electrodes(self, nwb_content):
         device_electrode_regions = {}

@@ -86,12 +86,11 @@ class MetadataReader:
 
         device_metadata = self.metadata_input['device']
         for key in ('ECoG', 'Poly'):
-            # required for ElectrodeGroup component
+            # required for ElectrodeGroup component - placeholders for now
             if 'description' not in device_metadata[key]:
-                device_metadata[key]['description'] = device_metadata[key]['name']
+                device_metadata[key]['descriptions'] = {}
             if 'location' not in device_metadata[key]:
-                # NEED: anatomical location in the brain, such as 'V1' or 'CA3'
-                # perhaps something like 'AC' or 'A1' in our cases?
+                # anatomical location in the brain
                 device_metadata[key]['location'] = ''
             if 'location_details' not in device_metadata[key]:
                 # more quantitative information
@@ -125,10 +124,11 @@ class MetadataReader:
             ecog_post_loc = device_metadata['ECoG'].pop('ecog_post_loc', None)
             if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
                 device_metadata['ECoG']['location_details'] = (
-                    f'{ecog_lat_loc} mm from lateral ridge '
-                    f'and {ecog_post_loc} mm from posterior ridge.')
+                    f'Located {ecog_lat_loc} mm from lateral ridge '
+                    f'and {ecog_post_loc} mm from posterior ridge.'
+                    )
         if has_poly:
-            device_metadata['Poly']['location_details'] = 'Within the ECoG grid.'
+            device_metadata['Poly']['location_details'] = 'Located within the ECoG grid.'
 
     def __convert_bool(self, s):
         """Convert a True/False text (string) to a boolean value.
@@ -357,7 +357,8 @@ class MetadataManager:
             if key in ('ECoG', 'Poly'):
                 if isinstance(value, str):
                     device_metadata[key] = {'name': value}
-                probe_name = device_metadata[key]['name']
+                dev_conf = device_metadata[key]
+                probe_name = dev_conf['name']
                 probe_path = os.path.join(self.yaml_lib_path, 'probe', probe_name + '.yaml')
                 device_metadata[key].update(read_yaml(probe_path))
 
@@ -365,15 +366,31 @@ class MetadataManager:
                 # (using device_metadata['Poly']['poly_ap_loc']
                 # and device_metadata['Poly']['poly_dev_loc'])
 
-                # format device description
-                nchannels, device_type, manufacturer = (
-                    device_metadata[key]['nchannels'],
-                    device_metadata[key]['device_type'],
-                    device_metadata[key]['manufacturer'])
-                device_metadata[key]['description'] = (
-                    f'{nchannels}-ch {key} '
-                    f'from {manufacturer} '
-                    f'({device_type})')
+                basic_description = f"{dev_conf.pop('nchannels')}-ch {key}"
+
+                # for new data only
+                extra_device_description = ""
+                if 'serial' in dev_conf:
+                    extra_device_description += f"serial={dev_conf.pop('serial')}. "
+                if 'acq' in dev_conf:
+                    extra_device_description += (
+                        f"acq={dev_conf.pop('acq').replace(' ', '-')}. ")
+
+                dev_conf['descriptions'] = {} # ignore existing placeholder text
+                dev_conf['descriptions']['device_description'] = (
+                    f"{basic_description} from {dev_conf['manufacturer']} "
+                    f"({dev_conf.pop('device_type')}). "
+                    f"{extra_device_description}"
+                    f"n_columns={dev_conf.pop('n_columns')}, "
+                    f"n_rows={dev_conf.pop('n_rows')}, "
+                    f"orientation={dev_conf.pop('orientation')}, "
+                    f"xspacing={dev_conf.pop('xspacing', '(unknown)')}mm, "
+                    f"yspacing={dev_conf.pop('yspacing', '(unknown)')}mm, "
+                    f"prefix={dev_conf['prefix']}."
+                    )
+                dev_conf['descriptions']['electrode_group_description'] = (
+                    f"{basic_description}. "
+                    f"{dev_conf.pop('location_details')}").strip()
 
                 # add device location if not already specified
                 if ('location' not in device_metadata[key] or
