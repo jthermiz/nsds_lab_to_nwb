@@ -15,7 +15,8 @@ class ElectrodesOriginator():
     def __create_devices(self, nwb_content):
         ''' create devices '''
         for device_name, dev_conf in self.metadata['device'].items():
-            if isinstance(dev_conf, str): #Skip mark and audio,
+            if not isinstance(dev_conf, dict):
+                # skip any extra items in metadata
                 continue
             device = nwb_content.create_device(name=device_name,
                                                manufacturer=dev_conf['manufacturer'])
@@ -23,24 +24,26 @@ class ElectrodesOriginator():
     def __create_electrode_groups(self, nwb_content):
         ''' create electrode groups '''
         for device_name, device in nwb_content.devices.items():
+            # in our case, only one ElectrodeGroup per device;
+            # therefore ElectrodeGroup name is the same as device name
+            dev_conf = self.metadata['device'][device_name]
             e_group = nwb_content.create_electrode_group(
                 name=device_name,
-                description=self.metadata['device'][device_name]['description'],
-                location=self.metadata['device'][device_name]['location'],
+                description=dev_conf['description'],
+                location=dev_conf['location'],
                 device=device)
 
     def __add_electrodes(self, nwb_content):
         device_electrode_regions = {}
         e_id_gen = itertools.count()    # Electrode ID, unique for channels across devices
         for device_name in nwb_content.devices:
-            # device = nwb_content.devices[device_name]
             e_group = nwb_content.electrode_groups[device_name]
-            dev_config = self.metadata['device'][device_name]
+            dev_conf = self.metadata['device'][device_name]
 
             # Add each electrode
             electrode_region = []
-            ch_ids = dev_config['ch_ids']
-            ch_pos = dev_config['ch_pos']
+            ch_ids = dev_conf['ch_ids']
+            ch_pos = dev_conf['ch_pos']
             for i in ch_ids:
                 e_id = next(e_id_gen)
                 nwb_content.add_electrode(
@@ -48,9 +51,9 @@ class ElectrodesOriginator():
                     x=ch_pos[str(i)]['x'],
                     y=ch_pos[str(i)]['y'],
                     z=ch_pos[str(i)]['z'],
-                    location=dev_config['location'],
-                    imp=dev_config['imp'],
-                    filtering=dev_config['filtering'],
+                    location=dev_conf['location'],
+                    imp=dev_conf['imp'],
+                    filtering=dev_conf['filtering'],
                     group=e_group)
                 # Collect device channel IDs for electrode table region
                 electrode_region.append(e_id)
