@@ -8,3 +8,4 @@ nsds\_lab\_to\_nwb API
    common
    components/components
    metadata
+   tools/tools
