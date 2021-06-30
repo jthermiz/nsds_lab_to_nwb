@@ -9,8 +9,6 @@ from pynwb.file import Subject
 from nsds_lab_to_nwb.common.data_scanners import AuditoryDataScanner
 from nsds_lab_to_nwb.common.time import (get_current_time, get_default_time,
                                          validate_time)
-from nsds_lab_to_nwb.components.device.device_originator import DeviceOriginator
-from nsds_lab_to_nwb.components.electrode.electrode_groups_originator import ElectrodeGroupsOriginator
 from nsds_lab_to_nwb.components.electrode.electrodes_originator import ElectrodesOriginator
 from nsds_lab_to_nwb.components.neural_data.neural_data_originator import NeuralDataOriginator
 from nsds_lab_to_nwb.components.stimulus.stimulus_originator import StimulusOriginator
@@ -81,8 +79,6 @@ class NWBBuilder:
         self.output_file = os.path.join(rat_out_dir, f'{self.block_folder}.nwb')
 
         logger.info('Creating originator instances...')
-        self.device_originator = DeviceOriginator(self.metadata)
-        self.electrode_groups_originator = ElectrodeGroupsOriginator(self.metadata)
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
         self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata)
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
@@ -161,9 +157,7 @@ class NWBBuilder:
             surgery=self.metadata.get('surgery', None),
         )
 
-        logger.info('Adding hardware information...')
-        self.device_originator.make(nwb_content)
-        self.electrode_groups_originator.make(nwb_content)
+        logger.info('Adding electrode information...')
         electrode_table_regions = self.electrodes_originator.make(nwb_content)
 
         logger.info('Adding neural data...')

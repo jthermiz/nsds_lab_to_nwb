@@ -1,12 +1,13 @@
 import logging
 import os
-import csv
 import numpy as np
-import pandas as pd
+import itertools
+from collections import OrderedDict
+
 from nsds_lab_to_nwb.utils import (get_metadata_lib_path, get_stim_lib_path,
                                    split_block_folder)
 
-from nsds_lab_to_nwb.common.io import read_yaml, write_yaml, csv_to_dict
+from nsds_lab_to_nwb.common.io import read_yaml, write_yaml
 from nsds_lab_to_nwb.metadata.exp_note_reader import ExpNoteReader
 from nsds_lab_to_nwb.metadata.keymap_helper import apply_keymap
 from nsds_lab_to_nwb.metadata.resources import read_metadata_resource
@@ -22,11 +23,11 @@ class MetadataReader:
     ''' Reads metadata input for new experiments.
     '''
     def __init__(self,
-                block_metadata_path: str,
-                metadata_lib_path: str,
-                block_folder: str,
-                metadata_save_path=None,
-                ):
+                 block_metadata_path: str,
+                 metadata_lib_path: str,
+                 block_folder: str,
+                 metadata_save_path=None,
+                 ):
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = get_metadata_lib_path(metadata_lib_path)
         self.block_folder = block_folder
@@ -88,12 +89,11 @@ class MetadataReader:
 
         device_metadata = self.metadata_input['device']
         for key in ('ECoG', 'Poly'):
-            # required for ElectrodeGroup component
+            # required for ElectrodeGroup component - placeholders for now
             if 'description' not in device_metadata[key]:
-                device_metadata[key]['description'] = device_metadata[key]['name']
+                device_metadata[key]['descriptions'] = {}
             if 'location' not in device_metadata[key]:
-                # NEED: anatomical location in the brain, such as 'V1' or 'CA3'
-                # perhaps something like 'AC' or 'A1' in our cases?
+                # anatomical location in the brain
                 device_metadata[key]['location'] = ''
             if 'location_details' not in device_metadata[key]:
                 # more quantitative information
@@ -106,8 +106,7 @@ class MetadataReader:
             if 'filtering' not in device_metadata[key]:
                 device_metadata[key]['filtering'] = (
                     'The signal is low pass filtered at 45 percent of the sample rate, '
-                    'and high pass filtered at 2 Hz.'
-                    )
+                    'and high pass filtered at 2 Hz.')
 
     def extra_cleanup(self):
         device_metadata = self.metadata_input['device']
@@ -128,11 +127,10 @@ class MetadataReader:
             ecog_post_loc = device_metadata['ECoG'].pop('ecog_post_loc', None)
             if (ecog_lat_loc is not None) and (ecog_post_loc is not None):
                 device_metadata['ECoG']['location_details'] = (
-                    f'{ecog_lat_loc} mm from lateral ridge '
-                    f'and {ecog_post_loc} mm from posterior ridge.'
-                    )
+                    f'Located {ecog_lat_loc} mm from lateral ridge '
+                    f'and {ecog_post_loc} mm from posterior ridge.')
         if has_poly:
-            device_metadata['Poly']['location_details'] = 'Within the ECoG grid.'
+            device_metadata['Poly']['location_details'] = 'Located within the ECoG grid.'
 
     def __convert_bool(self, s):
         """Convert a True/False text (string) to a boolean value.
@@ -165,11 +163,11 @@ class LegacyMetadataReader(MetadataReader):
     ''' Reads metadata input for old experiments.
     '''
     def __init__(self,
-                block_metadata_path: str,
-                metadata_lib_path: str,
-                block_folder: str,
-                metadata_save_path=None,
-                ):
+                 block_metadata_path: str,
+                 metadata_lib_path: str,
+                 block_folder: str,
+                 metadata_save_path=None,
+                 ):
         super().__init__(block_metadata_path, metadata_lib_path,
                          block_folder, metadata_save_path)
 
@@ -200,8 +198,7 @@ class LegacyMetadataReader(MetadataReader):
         # fill in old subject information
         old_subject_input = read_metadata_resource('old_subject_metadata')
         old_subject_metadata = old_subject_input['subject_metadata']
-        old_subject_metadata['weight'] = old_subject_input['weights'].get(
-                                                    self.animal_name, 'Unknown')
+        old_subject_metadata['weight'] = old_subject_input['weights'].get(self.animal_name, 'Unknown')
         for key in old_subject_metadata:
             if key not in self.metadata_input['subject']:
                 self.metadata_input['subject'][key] = old_subject_metadata[key]
@@ -216,7 +213,7 @@ class LegacyMetadataReader(MetadataReader):
         if self.experiment_type == 'auditory':
             self.metadata_input['experiment_description'] = 'Auditory experiment'
         if ('session_description' not in self.metadata_input
-                    or len(self.metadata_input['session_description']) == 0):
+                or len(self.metadata_input['session_description']) == 0):
             self.metadata_input['session_description'] = (
                 'Auditory experiment with {} stimulus'.format(self.metadata_input['stimulus']['name']))
 
@@ -268,16 +265,16 @@ class MetadataManager:
 
         if self.legacy_block:
             self.metadata_reader = LegacyMetadataReader(
-                            block_metadata_path=self.block_metadata_path,
-                            metadata_lib_path=self.metadata_lib_path,
-                            block_folder=self.block_folder,
-                            metadata_save_path=self.metadata_save_path)
+                block_metadata_path=self.block_metadata_path,
+                metadata_lib_path=self.metadata_lib_path,
+                block_folder=self.block_folder,
+                metadata_save_path=self.metadata_save_path)
         else:
             self.metadata_reader = MetadataReader(
-                            block_metadata_path=self.block_metadata_path,
-                            metadata_lib_path=self.metadata_lib_path,
-                            block_folder=self.block_folder,
-                            metadata_save_path=self.metadata_save_path)
+                block_metadata_path=self.block_metadata_path,
+                metadata_lib_path=self.metadata_lib_path,
+                block_folder=self.block_folder,
+                metadata_save_path=self.metadata_save_path)
 
     def __detect_legacy_block(self, legacy_block=None):
         if (legacy_block is not None):
@@ -358,27 +355,66 @@ class MetadataManager:
         stimulus_metadata.update(read_yaml(stim_yaml_path))
 
     def __load_probes(self, device_metadata):
+        e_id_gen = itertools.count()    # Electrode ID, unique for channels across devices
         for key, value in device_metadata.items():
             if key in ('ECoG', 'Poly'):
                 if isinstance(value, str):
                     device_metadata[key] = {'name': value}
-                probe_name = device_metadata[key]['name']
-                probe_path = os.path.join(self.yaml_lib_path, 'probe', probe_name + '.yaml')
-                device_metadata[key].update(read_yaml(probe_path))
+                dev_conf = device_metadata[key]
+                probe_path = os.path.join(self.yaml_lib_path, 'probe', dev_conf['name'] + '.yaml')
+                dev_conf.update(read_yaml(probe_path))
+
+                # replace ch_ids and ch_pos with a single ch_map (OrderedDict)
+                ch_ids = dev_conf.pop('ch_ids')
+                ch_pos = dev_conf.pop('ch_pos')
+                ch_map = OrderedDict()
+                for i in ch_ids:
+                    e_id = next(e_id_gen)
+                    ch_map[i] = {'electrode_id': e_id,
+                                 'x': ch_pos[str(i)]['x'],
+                                 'y': ch_pos[str(i)]['y'],
+                                 'z': ch_pos[str(i)]['z']}
+                dev_conf['ch_map'] = ch_map
 
                 # TODO/CONSIDER: apply offset to all poly ch_pos systematically?
                 # (using device_metadata['Poly']['poly_ap_loc']
                 # and device_metadata['Poly']['poly_dev_loc'])
 
-                # format device description
-                nchannels, device_type, manufacturer = (
-                    device_metadata[key]['nchannels'],
-                    device_metadata[key]['device_type'],
-                    device_metadata[key]['manufacturer'])
-                device_metadata[key]['description'] = (
-                    f'{nchannels}-ch {key} '
-                    # f'({device_type}) '
-                    f'from {manufacturer}')
+                # set up device descriptions;
+                # prepare two versions for device and e-group
+                basic_description = f"{dev_conf.pop('nchannels')}-ch {key}"
+                # for new data only
+                extra_device_description = ""
+                if 'serial' in dev_conf:
+                    extra_device_description += f"serial={dev_conf.pop('serial')}. "
+                if 'acq' in dev_conf:
+                    extra_device_description += (
+                        f"acq={dev_conf.pop('acq').replace(' ', '-')}. ")
+
+                # keep poly_neighbors, if applicable, after channel remapping
+                poly_neighbors = dev_conf.pop('poly_neighbors', None)
+                if poly_neighbors is not None:
+                    # apply ch_map, and flatten to a text description
+                    location_details = "poly_neighbors=["
+                    location_details += (", ".join([str(ch_map[pn]['electrode_id'])
+                                                    for pn in poly_neighbors])).rstrip(', ')
+                    location_details += "]. "
+                    dev_conf['location_details'] += location_details
+
+                dev_conf['descriptions'] = {} # ignore existing placeholder text
+                dev_conf['descriptions']['device_description'] = (
+                    f"{basic_description} from {dev_conf['manufacturer']} "
+                    f"({dev_conf.pop('device_type')}). "
+                    f"{extra_device_description}"
+                    f"n_columns={dev_conf.pop('n_columns')}, "
+                    f"n_rows={dev_conf.pop('n_rows')}, "
+                    f"orientation={dev_conf.pop('orientation')}, "
+                    f"xspacing={dev_conf.pop('xspacing', '(unknown)')}mm, "
+                    f"yspacing={dev_conf.pop('yspacing', '(unknown)')}mm, "
+                    f"prefix={dev_conf['prefix']}.")
+                dev_conf['descriptions']['electrode_group_description'] = (
+                    f"{basic_description}. "
+                    f"{dev_conf.pop('location_details')}").strip()
 
                 # add device location if not already specified
                 if ('location' not in device_metadata[key] or

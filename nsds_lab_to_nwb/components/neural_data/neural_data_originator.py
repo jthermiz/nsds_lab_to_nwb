@@ -31,6 +31,17 @@ class NeuralDataOriginator():
             description += ' Then resampled down to {0:d} Hz'.format(int(self.resample_rate))
         return description
 
+    def make_comments(self, dev_conf):
+        if 'bad_chs' not in dev_conf:
+            return ''
+
+        ch_map = dev_conf['ch_map']
+        comments = 'bad_channels=['
+        comments += (", ".join([str(ch_map[i]['electrode_id'])  # re-map channels
+                                for i in dev_conf['bad_chs']])).rstrip(', ')
+        comments += "]"
+        return comments
+
     def resample(self, data):
         # only resample if rate is not at nearest kHz
         rate = self.hardware_rate
@@ -58,9 +69,8 @@ class NeuralDataOriginator():
 
             data, metadata = self.neural_data_reader.get_data(stream=device_name, dev_conf=dev_conf)
             if data is None:
-                logger.info(f'No data availble for {device_name}. Skipping...')
+                logger.info(f'No data available for {device_name}. Skipping...')
             else:
-
                 # resample data
                 self.hardware_rate = metadata['sample_rate']
                 if self.resample_flag:
@@ -69,13 +79,17 @@ class NeuralDataOriginator():
                 # make description
                 description = self.make_description(device_name)
 
+                # make comments (mention bad channels)
+                comments = self.make_comments(dev_conf)
+
                 electrode_table_region = electrode_table_regions[device_name]
                 e_series = ElectricalSeries(name=device_name,
                                             data=data,
                                             electrodes=electrode_table_region,
                                             starting_time=0.,
                                             rate=self._get_rate(),
-                                            description=description
+                                            description=description,
+                                            comments=comments,
                                             )
-                logger.info(f'Adding {device_name} data NWB...')
+                logger.info(f'Adding {device_name} data to NWB...')
                 nwb_content.add_acquisition(e_series)
