@@ -1,6 +1,6 @@
 import logging.config
 
-from nsds_lab_to_nwb.components.htk.readers.instrument import EPhysInstrumentData
+from nsds_lab_to_nwb.tools.htk.readers.instrument import EPhysInstrumentData
 
 logger = logging.getLogger(__name__)
 

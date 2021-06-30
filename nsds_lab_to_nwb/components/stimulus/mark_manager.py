@@ -1,7 +1,7 @@
 from pynwb import TimeSeries
 
-from nsds_lab_to_nwb.components.htk.readers.htkfile import HTKFile
-from nsds_lab_to_nwb.components.tdt.tdt_reader import TDTReader
+from nsds_lab_to_nwb.tools.htk.readers.htkfile import HTKFile
+from nsds_lab_to_nwb.tools.tdt.tdt_reader import TDTReader
 
 
 class MarkManager():
