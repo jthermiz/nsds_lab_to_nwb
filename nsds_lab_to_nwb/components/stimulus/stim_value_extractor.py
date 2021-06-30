@@ -3,7 +3,7 @@ import os
 import numpy as np
 import csv
 import h5py
-# import pkg_resources
+import scipy.io
 
 from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 
@@ -59,9 +59,16 @@ class StimValueExtractor():
 
 def tone_stimulus_values(mat_file_path):
     ''' adapted from mars.configs.block_directory '''
-    with h5py.File(mat_file_path, 'r') as sio:
+    try:
+        with h5py.File(mat_file_path, 'r') as sio:
+            stim_vals = sio['stimVls'][:].astype(int)
+    except OSError:
+        # if we get 'OSError: Unable to open file (File signature not found)'
+        # this mat file may be from an earlier MATLAB version
+        # and is not in HDF5 format.
+        sio = scipy.io.loadmat(mat_file_path)
         stim_vals = sio['stimVls'][:].astype(int)
-    stim_vals[0,:] = stim_vals[0,:]+8
+    stim_vals[0,:] = stim_vals[0,:] + 8
     return stim_vals
 
 
