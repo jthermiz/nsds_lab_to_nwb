@@ -25,12 +25,13 @@ class TestCase_Build_NWB(unittest.TestCase):
         #                       B09: stimulus type 'nan' not found
         #                       B10: ValueError: Unknown stimulus type '{stim_name}' for mark tokenizer
         # legacy test block: R56_B10: metadata yaml not found in data_path
-        block_folder = 'R56_B10'
+        block_folder = 'RVG16_B07'
+        resample_data = False   # for testing
         use_htk = False
         # --------------------------------------------------------------
-        self.__build_nwb_content(block_folder, use_htk)
+        self.__build_nwb_content(block_folder, resample_data, use_htk)
 
-    def __build_nwb_content(self, block_folder, use_htk):
+    def __build_nwb_content(self, block_folder, resample_data=True, use_htk=False):
         ''' build NWB but do not write file to disk '''
         _, animal_name, _ = split_block_folder(block_folder)
         block_metadata_path = os.path.join(self.data_path, animal_name, block_folder,
@@ -40,6 +41,7 @@ class TestCase_Build_NWB(unittest.TestCase):
                                  save_path=self.out_path,
                                  block_metadata_path=block_metadata_path,
                                  metadata_save_path=self.metadata_save_path,
+                                 resample_data=resample_data,
                                  use_htk=use_htk)
         nwb_content = nwb_builder.build()
 

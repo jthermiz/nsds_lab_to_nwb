@@ -40,6 +40,11 @@ class NWBBuilder:
         Path to metadata library repo.
     stim_lib_path : str
         Path to stimulus library.
+    metadata_save_path : str
+        Path to (optionally) save metadata input as yaml files.
+    resample_data : bool
+        Resample neural data to the nearest kHz.
+        Passed to resample_flag kwarg in NeuralDataOriginator.
     use_htk : bool
         Use data from HTK files.
     """
@@ -53,6 +58,7 @@ class NWBBuilder:
             metadata_lib_path: str = None,
             stim_lib_path: str = None,
             metadata_save_path: str = None,
+            resample_data=True,
             use_htk=False
     ):
         self.data_path = get_data_path(data_path)
@@ -64,6 +70,7 @@ class NWBBuilder:
         self.block_metadata_path = block_metadata_path
         self.stim_lib_path = stim_lib_path
         self.metadata_save_path = metadata_save_path
+        self.resample_data = resample_data
         self.use_htk = use_htk
 
         logger.info('Collecting metadata for NWB conversion...')
@@ -80,7 +87,8 @@ class NWBBuilder:
 
         logger.info('Creating originator instances...')
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
-        self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata)
+        self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata,
+                                                           resample_flag=self.resample_data)
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
 
         logger.info('Extracting session start time...')
