@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +46,12 @@ class ElectrodesOriginator():
             for _, ch in dev_conf['ch_map'].items():
                 nwb_content.add_electrode(
                     id=ch['electrode_id'],
-                    x=ch['x'],
-                    y=ch['y'],
-                    z=ch['z'],
+                    x=np.nan,
+                    y=np.nan,
+                    z=np.nan,
+                    rel_x=ch['x'],
+                    rel_y=ch['y'],
+                    rel_z=ch['z'],
                     location=dev_conf['location'],
                     imp=dev_conf['imp'],
                     filtering=dev_conf['filtering'],
