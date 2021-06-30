@@ -9,7 +9,7 @@ from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 
 class StimValueExtractor():
     def __init__(self, stim_configs, stim_lib_path):
-        self.stim_name = stim_configs['name']
+        self.stim_name, self.stim_info = check_stimulus_name(stim_configs['name'])
         self.stim_values_command = stim_configs.get('stim_values', None)
         self.stim_lib_path = stim_lib_path
 
@@ -18,6 +18,10 @@ class StimValueExtractor():
             if self.stim_name in ('tone', 'tone150'):
                 stim_values_path = self._get_stim_values_path()
                 stim_values = tone_stimulus_values(stim_values_path)
+                return stim_values
+            elif self.stim_name in ('timit'):
+                stim_values_path = self._get_stim_values_path()
+                stim_values = timit_stimulus_values(stim_values_path)
                 return stim_values
             else:
                 # TODO: catch other stimulus types as well
@@ -49,8 +53,7 @@ class StimValueExtractor():
 
     def _get_stim_values_path(self, path_from_metadata=None):
         # prioritize path from list_of_stimuli.yaml in this package
-        _, stim_info = check_stimulus_name(self.stim_name)
-        path_from_los = stim_info['stim_values_path']
+        path_from_los = self.stim_info['parameter_path']
         if len(path_from_los) > 0:
             return os.path.join(self.stim_lib_path, path_from_los)
 
@@ -96,15 +99,25 @@ def tone_stimulus_values(mat_file_path):
     return stim_vals
 
 
-def timit_stimulus_values(csv_file_path):
-    ''' adapted from mars.configs.block_directory '''
-    # NOTE: this file timit998.txt is just a list of wav files.
-    # TODO: also load from these wav files.
-    stim_vals = []
-    with open(csv_file_path, 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            stim_vals.append(row['sample_id'])
+def timit_stimulus_values(file_path):
+    ''' adapted from mars.configs.block_directory
+
+    Parameters:
+    -----------
+    file_path: full path to a .txt file that contains a list of filenames
+
+    Returns:
+    --------
+    stim_vals: a list of strings, where each item is a .wav file name in TIMIT.
+        (should confirm!)
+    '''
+    _, ext = os.path.splitext(file_path)
+    if not (ext == '.txt'):
+        raise ValueError('for now only accepting a txt file that lists wav file names.')
+
+    # expecting a text file, one .wav filename string per row
+    with open(file_path) as f:
+        stim_vals = f.readlines()
     return stim_vals
 
 
