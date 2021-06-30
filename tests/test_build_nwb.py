@@ -1,96 +1,42 @@
 import os
-import numpy as np
 import unittest
-import sys
-from pynwb import NWBHDF5IO
-sys.path.insert(0, '.')
 
 from nsds_lab_to_nwb.nwb_builder import NWBBuilder
 from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
-
-PWD = os.path.dirname(os.path.abspath(__file__))
-USER_HOME = os.path.expanduser("~")
+from nsds_lab_to_nwb.utils import (split_block_folder, get_data_path,
+                                   get_metadata_lib_path, get_stim_lib_path)
 
 
 class TestCase_Build_NWB(unittest.TestCase):
 
-    # raw data path
-    data_path = '/clusterfs/NSDS_data/hackathon20201201/'
+    data_path = get_data_path()
+    metadata_save_path = '_test/'
+    out_path = '_test/'
 
-    # new base?
-    # data_path_tdt = '/clusterfs/NSDS_data/hackathon20201201/TTankBackup/'
-
-    # output path (this will not be used)
-    out_path = os.path.join(USER_HOME, 'Data/nwb_test/')
-    
-    def test_build_nwb_case1_old_data(self):
+    def test_build_nwb_single_block(self):
         ''' build NWB but do not write file to disk '''
-        animal_name = 'R56'
-        block = 'B13'
-        # link to metadata files
-        block_metadata_path = os.path.join(PWD, f'../yaml/{animal_name}/{animal_name}_{block}.yaml')
-        library_path = os.path.join(USER_HOME, 'Src/NSDSLab-NWB-metadata/')
-        # collect metadata needed to build the NWB file
-        nwb_metadata = MetadataManager(block_metadata_path=block_metadata_path,
-                                       library_path=library_path)
-        # create a builder for the block
-        nwb_builder = NWBBuilder(
-                        animal_name=animal_name,
-                        block=block,
-                        data_path=self.data_path,
-                        out_path=self.out_path,
-                        nwb_metadata=nwb_metadata
-                        )
-        # build the NWB file content
+        # --------------------------------------------------------------
+        # currently failing blocks:
+        # new test blocks:   RVG16_{B02, B04, B05, B06, B07, B08, B09, B10}
+        # legacy test block: R56_B10
+        block_folder = 'RVG16_B02'
+        use_htk = False
+        # --------------------------------------------------------------
+        self.__build_nwb_content(block_folder, use_htk)
+
+    def __build_nwb_content(self, block_folder, use_htk):
+        ''' build NWB but do not write file to disk '''
+        _, animal_name, _ = split_block_folder(block_folder)
+        block_metadata_path = os.path.join(self.data_path, animal_name, block_folder,
+                                           f"{block_folder}.yaml")
+        nwb_builder = NWBBuilder(data_path=self.data_path,
+                                 block_folder=block_folder,
+                                 save_path=self.out_path,
+                                 block_metadata_path=block_metadata_path,
+                                 metadata_save_path=self.metadata_save_path,
+                                 use_htk=use_htk)
         nwb_content = nwb_builder.build()
 
-    def test_build_nwb_case2_new_data_no_stim(self):
-        ''' build NWB but do not write file to disk '''
-        animal_name = 'RVG02'
-        block = 'B09'
-        block_name = '{}_{}'.format(animal_name, block)
-        # link to metadata files
-        block_metadata_path = os.path.join(PWD, f'_data/RVG02/block_data.csv')
-        library_path = os.path.join(USER_HOME, 'Src/NSDSLab-NWB-metadata/')
-        # collect metadata needed to build the NWB file
-        nwb_metadata = MetadataManager(block_name=block_name,
-                                       block_metadata_path=block_metadata_path,
-                                       library_path=library_path)
-        # create a builder for the block
-        nwb_builder = NWBBuilder(
-                        animal_name=animal_name,
-                        block=block,
-                        data_path=self.data_path,
-                        out_path=self.out_path,
-                        nwb_metadata=nwb_metadata
-                        )
-        # build the NWB file content
-        nwb_content = nwb_builder.build(process_stim=False)
-        
-
-    def test_build_nwb_case3_htk(self):
-        ''' build NWB but do not write file to disk '''
-        animal_name = 'R56'
-        block = 'B13'
-        block_name = '{}_{}'.format(animal_name, block)
-        block_metadata_path = os.path.join(PWD, f'../yaml/{animal_name}/{animal_name}_{block}.yaml')
-        library_path = os.path.join(USER_HOME, 'software/NSDSLab-NWB-metadata/')
-
-        # collect metadata needed to build the NWB file
-        nwb_metadata = MetadataManager(block_name=block_name,
-                                       block_metadata_path=block_metadata_path,
-                                       library_path=library_path)
-        # create a builder for the block
-        nwb_builder = NWBBuilder(
-                        animal_name=animal_name,
-                        block=block,
-                        data_path=self.data_path,
-                        out_path=self.out_path,
-                        nwb_metadata=nwb_metadata,
-                        use_htk=True
-                        )
-        # build the NWB file content
-        nwb_content = nwb_builder.build(process_stim=True)
 
 if __name__ == '__main__':
     unittest.main()
