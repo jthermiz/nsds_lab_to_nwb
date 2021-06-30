@@ -10,3 +10,8 @@ Common API
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. automodule:: nsds_lab_to_nwb.common.time
+  :members:
+  :undoc-members:
+  :show-inheritance:

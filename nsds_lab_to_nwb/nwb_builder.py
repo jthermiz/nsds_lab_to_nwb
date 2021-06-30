@@ -2,20 +2,19 @@ import logging.config
 import sys
 import os
 import uuid
-from datetime import datetime
-import pytz
 
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.file import Subject
 
 from nsds_lab_to_nwb.common.data_scanners import AuditoryDataScanner
-from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
-
+from nsds_lab_to_nwb.common.time import (get_current_time, get_default_time,
+                                         validate_time)
 from nsds_lab_to_nwb.components.device.device_originator import DeviceOriginator
 from nsds_lab_to_nwb.components.electrode.electrode_groups_originator import ElectrodeGroupsOriginator
 from nsds_lab_to_nwb.components.electrode.electrodes_originator import ElectrodesOriginator
 from nsds_lab_to_nwb.components.neural_data.neural_data_originator import NeuralDataOriginator
 from nsds_lab_to_nwb.components.stimulus.stimulus_originator import StimulusOriginator
+from nsds_lab_to_nwb.metadata.metadata_manager import MetadataManager
 from nsds_lab_to_nwb.utils import (get_data_path, get_metadata_lib_path, get_stim_lib_path,
                                    split_block_folder)
 
@@ -24,11 +23,6 @@ logging.basicConfig(stream=sys.stderr)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-LOCAL_TIMEZONE = pytz.timezone('US/Pacific')
-
-# TODO: GET ACCURATE START TIME
-_DEFAULT_SESSION_START_TIME = datetime.fromtimestamp(0, tz=LOCAL_TIMEZONE)
 
 
 class NWBBuilder:
@@ -48,8 +42,6 @@ class NWBBuilder:
         Path to metadata library repo.
     stim_lib_path : str
         Path to stimulus library.
-    session_start_time : float
-        Start time for NWB
     use_htk : bool
         Use data from HTK files.
     """
@@ -62,7 +54,6 @@ class NWBBuilder:
             block_metadata_path: str,
             metadata_lib_path: str = None,
             stim_lib_path: str = None,
-            session_start_time=_DEFAULT_SESSION_START_TIME,
             use_htk=False
     ):
         self.data_path = get_data_path(data_path)
@@ -74,7 +65,6 @@ class NWBBuilder:
         self.block_metadata_path = block_metadata_path
         self.metadata_lib_path = metadata_lib_path
         self.stim_lib_path = stim_lib_path
-        self.session_start_time = session_start_time
         self.use_htk = use_htk
 
         logger.info('Collecting metadata for NWB conversion...')
@@ -96,6 +86,9 @@ class NWBBuilder:
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
         self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata)
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
+
+        logger.info('Extracting session start time...')
+        self.session_start_time = self._extract_session_start_time()
 
     def _collect_nwb_metadata(self, block_metadata_path, metadata_lib_path, stim_lib_path):
         # collect metadata for NWB conversion
@@ -119,6 +112,16 @@ class NWBBuilder:
             raise ValueError('unknown experiment type')
         return data_scanner.extract_dataset()
 
+    def _extract_session_start_time(self):
+        if self.use_htk:
+            logger.info(' - Using a dummy session_start_time (HTK pipeline)')
+            return get_default_time()
+
+        # extract from TDT data
+        recorded_metadata = self.neural_data_originator.neural_data_reader.tdt_obj['info']
+        session_start_time = recorded_metadata['start_date']
+        return validate_time(session_start_time)
+
     def build(self, process_stim=True):
         '''Build NWB file content.
 
@@ -132,7 +135,7 @@ class NWBBuilder:
         nwb_content: an NWBFile object.
         '''
         logger.info('Building components for NWB')
-        current_time = datetime.now(tz=pytz.utc).astimezone(LOCAL_TIMEZONE)
+        current_time = get_current_time()
 
         block_name = self.metadata['block_name']
         nwb_content = NWBFile(
