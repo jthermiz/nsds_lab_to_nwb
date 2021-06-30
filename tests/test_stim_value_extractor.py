@@ -25,6 +25,10 @@ class TestCase_StimValueExtractor(unittest.TestCase):
         stim_name = 'wn2'
         stim_values = self.__test_stim(stim_name)
 
+    def test_tone(self):
+        stim_name = 'tone'
+        stim_values = self.__test_stim(stim_name)
+
     def test_tone150(self):
         stim_name = 'tone150'
         stim_values = self.__test_stim(stim_name)
