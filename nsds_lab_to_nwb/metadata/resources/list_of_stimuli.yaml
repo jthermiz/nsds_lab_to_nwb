@@ -10,6 +10,12 @@
 #               indicating when events happens in auditory stimulus
 #   parameter_path: (str) path to the mat file, when available,
 #               that stores parameters that describe auditory stimlus
+#   stim_values_path: (str) path to the mat file, when available,
+#               that stores the stim_values (used in stim_value_extractor.py)
+#               ***************************************************************
+#               (Q: Is this redundant information?
+#                   Can we extract same data from audio_path or parameter_path?)
+#               ***************************************************************
 # ---------------------------------------------------------------
 
 tone150:
@@ -18,6 +24,7 @@ tone150:
     audio_path: 'Tone150/freq_resp_area_stimulus_signal_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.wav'
     marker_path: 'Tone150/freq_resp_area_stimulus_trigger_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.wav'
     parameter_path: 'Tone150/freq_resp_area_stimulus_signal_flo500Hz_fhi32000Hz_nfreq30_natten1_nreps150_fs96000.mat'
+    stim_values_path: 'Tone150/Tone150_stim_stimVls.mat'
 
 timit:
     alt_names: ['Timit998']
@@ -25,6 +32,7 @@ timit:
     audio_path: 'TIMIT/timit998/timit998s.wav'
     marker_path: 'TIMIT/timit998/timit998m.wav'
     parameter_path: 'TIMIT/timit998/timit998.mat'
+    stim_values_path: ''
 
 tone:
     alt_names: ['Full tone']
@@ -32,6 +40,7 @@ tone:
     audio_path: 'Tone/stimulus_signal_03202013.wav'
     marker_path: 'Tone/stimulus_trigger_03202013.wav'
     parameter_path: ''
+    stim_values_path: ''
 
 wn2:
     alt_names: ['White noise']
@@ -39,6 +48,7 @@ wn2:
     audio_path: 'WN/tb_noise_burst_stim_fs96kHz_signal.wav'
     marker_path: 'WN/tb_noise_burst_stim_fs96kHz_trigger.wav'
     parameter_path: ''
+    stim_values_path: ''
 
 dmr:
     alt_names: ['Ripple']
@@ -46,6 +56,7 @@ dmr:
     audio_path: 'DMR/dmr-500flo-40000fhi-4SM-40TM-40db-96khz-48DF-15min.wav'
     marker_path: 'DMR/trig-dmr-500flo-40000fhi-4SM-40TM-40db-96khz-48DF-15min.wav'
     parameter_path: ''
+    stim_values_path: ''
 
 tone_diagnostic:
     alt_names: ['Tone diagnostic']
@@ -53,6 +64,7 @@ tone_diagnostic:
     audio_path: ''
     marker_path: ''
     parameter_path: ''
+    stim_values_path: ''
 
 baseline:
     alt_names: ['Baseline']
@@ -60,6 +72,7 @@ baseline:
     audio_path: ''
     marker_path: ''
     parameter_path: ''
+    stim_values_path: ''
 
 nan:
     alt_names: []
@@ -67,3 +80,4 @@ nan:
     audio_path: ''
     marker_path: ''
     parameter_path: ''
+    stim_values_path: ''

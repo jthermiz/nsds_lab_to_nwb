@@ -46,21 +46,6 @@ class WavManager():
         _, stim_info = check_stimulus_name(stim_name)
         return os.path.join(stim_path, stim_info['audio_path'])
 
-    @staticmethod
-    def append_stim_folder(stim_name, path):
-        if stim_name == 'tone150':
-            return os.path.join(path, 'Tone150')
-        elif stim_name == 'timit':
-            return os.path.join(path, 'TIMIT')
-        elif stim_name == 'tone':
-            return os.path.join(path, 'Tone')
-        elif stim_name == 'wn2':
-            return os.path.join(path, 'WN')
-        elif stim_name == 'dmr':
-            return os.path.join(path, 'DMR')
-        else:
-            raise ValueError(f"Unknown stimulus type '{stim_name}'")
-
     def __load_stim_values(self):
         '''load stim_values from .mat or .csv files,
         or generate using original script (mars/configs/block_directory.py)
@@ -68,7 +53,5 @@ class WavManager():
         if not ('stim_values' in self.stim_configs):
             self.stim_configs['stim_values'] = None
         else:
-            sve = StimValueExtractor(self.stim_configs['stim_values'],
-                                     self.append_stim_folder(self.stim_name,
-                                                             self.stim_lib_path))
+            sve = StimValueExtractor(self.stim_configs, self.stim_lib_path)
             self.stim_configs['stim_values'] = sve.extract()

@@ -3,13 +3,15 @@ import os
 import numpy as np
 import csv
 import h5py
-
 # import pkg_resources
+
+from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 
 
 class StimValueExtractor():
-    def __init__(self, stim_values_command, stim_lib_path):
-        self.stim_values_command = stim_values_command
+    def __init__(self, stim_configs, stim_lib_path):
+        self.stim_name = stim_configs['name']
+        self.stim_values_command = stim_configs['stim_values']
         self.stim_lib_path = stim_lib_path
 
     def extract(self):
@@ -18,29 +20,38 @@ class StimValueExtractor():
             extractor, filename = self.__parse_command(stim_values_command)
             if extractor != 'tone_stimulus_values':
                 raise ValueError('parsing error')
-            stim_values = eval('{}(\'{}\')'.format(extractor,
-                            os.path.join(self.stim_lib_path, filename)))
+            stim_values_path = self._get_stim_values_path(filename)
+            stim_values = tone_stimulus_values(stim_values_path)
         if 'timit_stimulus_values' in stim_values_command:
             extractor, filename = self.__parse_command(stim_values_command)
             if extractor != 'timit_stimulus_values':
                 raise ValueError('parsing error')
-            stim_values = eval('{}(\'{}\')'.format(extractor,
-                            os.path.join(self.stim_lib_path, filename)))
+            stim_values_path = self._get_stim_values_path(filename)
+            stim_values = timit_stimulus_values(stim_values_path)
         if 'gen_tone_stim_vals' in stim_values_command:
             extractor, _ = self.__parse_command(stim_values_command)
             if extractor != 'gen_tone_stim_vals':
                 raise ValueError('parsing error')
-            stim_values = eval('{}()'.format(extractor))
+            stim_values = gen_tone_stim_vals()
         if 'np.ones' in stim_values_command:
             stim_values = eval(stim_values_command)
 
         return stim_values
 
+    def _get_stim_values_path(self, path_from_metadata):
+        # prioritize path from list_of_stimuli.yaml in this package
+        _, stim_info = check_stimulus_name(self.stim_name)
+        path_from_los = stim_info['stim_values_path']
+        if len(path_from_los) > 0:
+            return os.path.join(self.stim_lib_path, path_from_los)
+
+        # if empty path in list_of_stimuli.yaml, use metadata input
+        return os.path.join(self.stim_lib_path, path_from_metadata)
+
     def __parse_command(self, command):
         ''' return (a_a_a, b.b.b) by parsing string 'a_a_a(b.b.b)' '''
         res = re.match('(\S+)\((\S+)\)', command)
         return (res.group(1), res.group(2))
-
 
 
 def tone_stimulus_values(mat_file_path):
@@ -49,6 +60,7 @@ def tone_stimulus_values(mat_file_path):
         stim_vals = sio['stimVls'][:].astype(int)
     stim_vals[0,:] = stim_vals[0,:]+8
     return stim_vals
+
 
 def timit_stimulus_values(csv_file_path):
     ''' adapted from mars.configs.block_directory '''
@@ -60,6 +72,7 @@ def timit_stimulus_values(csv_file_path):
         for row in reader:
             stim_vals.append(row['sample_id'])
     return stim_vals
+
 
 def gen_tone_stim_vals():
     ''' exact copy from mars.configs.block_directory '''
