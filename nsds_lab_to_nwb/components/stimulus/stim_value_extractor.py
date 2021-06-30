@@ -15,7 +15,14 @@ class StimValueExtractor():
 
     def extract(self):
         if self.stim_values_command is None:
-            return None
+            if self.stim_name in ('tone', 'tone150'):
+                stim_values_path = self._get_stim_values_path()
+                stim_values = tone_stimulus_values(stim_values_path)
+                return stim_values
+            else:
+                # TODO: catch other stimulus types as well
+                # return None
+                raise ValueError('missing input for stim_values')
 
         stim_values_command = self.stim_values_command
         if 'tone_stimulus_values' in stim_values_command:
@@ -40,7 +47,7 @@ class StimValueExtractor():
 
         return stim_values
 
-    def _get_stim_values_path(self, path_from_metadata):
+    def _get_stim_values_path(self, path_from_metadata=None):
         # prioritize path from list_of_stimuli.yaml in this package
         _, stim_info = check_stimulus_name(self.stim_name)
         path_from_los = stim_info['stim_values_path']
@@ -57,7 +64,19 @@ class StimValueExtractor():
 
 
 def tone_stimulus_values(mat_file_path):
-    ''' adapted from mars.configs.block_directory '''
+    ''' adapted from mars.configs.block_directory
+
+    Parameters:
+    -----------
+    mat_file_path: full path to a .mat file that contains stim_values.
+
+    Returns:
+    --------
+    stim_vals: a 2D array with two rows along the leading dimension.
+        stim_vals[0, :] are the amplitudes,
+        stim_vals[1, :] are the frequencies of the tones.
+        (should confirm!)
+    '''
     sio = read_mat_file(mat_file_path)
     stim_vals = sio['stimVls'][:].astype(int)
 
