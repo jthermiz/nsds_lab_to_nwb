@@ -11,10 +11,13 @@ from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 class StimValueExtractor():
     def __init__(self, stim_configs, stim_lib_path):
         self.stim_name = stim_configs['name']
-        self.stim_values_command = stim_configs['stim_values']
+        self.stim_values_command = stim_configs.get('stim_values', None)
         self.stim_lib_path = stim_lib_path
 
     def extract(self):
+        if self.stim_values_command is None:
+            return None
+
         stim_values_command = self.stim_values_command
         if 'tone_stimulus_values' in stim_values_command:
             extractor, filename = self.__parse_command(stim_values_command)

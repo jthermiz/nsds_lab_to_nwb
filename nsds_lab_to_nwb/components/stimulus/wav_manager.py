@@ -13,7 +13,7 @@ class WavManager():
         self.stim_name = stim_configs['name']
         self.stim_lib_path = get_stim_lib_path(stim_lib_path)
         self.stim_configs = stim_configs
-        self.__load_stim_values()
+        self._load_stim_values()
 
     def get_stim_wav(self, first_mark, name='recorded_mark'):
         if self.stim_name == 'wn1':
@@ -46,12 +46,9 @@ class WavManager():
         _, stim_info = check_stimulus_name(stim_name)
         return os.path.join(stim_path, stim_info['audio_path'])
 
-    def __load_stim_values(self):
+    def _load_stim_values(self):
         '''load stim_values from .mat or .csv files,
         or generate using original script (mars/configs/block_directory.py)
         '''
-        if not ('stim_values' in self.stim_configs):
-            self.stim_configs['stim_values'] = None
-        else:
-            sve = StimValueExtractor(self.stim_configs, self.stim_lib_path)
-            self.stim_configs['stim_values'] = sve.extract()
+        sve = StimValueExtractor(self.stim_configs, self.stim_lib_path)
+        self.stim_configs['stim_values'] = sve.extract()
