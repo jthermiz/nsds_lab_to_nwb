@@ -352,6 +352,7 @@ class MetadataManager:
         if stim_name != stimulus_metadata['name']:
             stimulus_metadata['alt_name'] = stimulus_metadata['name']
         stim_yaml_path = os.path.join(self.yaml_lib_path, 'stimulus', stim_name + '.yaml')
+        logger.debug(f'Trying to read stimulus metadata from {stim_yaml_path}...')
         stimulus_metadata.update(read_yaml(stim_yaml_path))
 
     def __load_probes(self, device_metadata):

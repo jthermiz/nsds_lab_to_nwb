@@ -17,9 +17,15 @@ class TestCase_Build_NWB(unittest.TestCase):
         ''' build NWB but do not write file to disk '''
         # --------------------------------------------------------------
         # currently failing blocks:
-        # new test blocks:   RVG16_{B02, B04, B05, B06, B07, B08, B09, B10}
-        # legacy test block: R56_B10
-        block_folder = 'RVG16_B02'
+        # new test blocks: RVG16_{B02, B04, B05, B06, B07, B08, B09, B10}
+        #                       B02, B04, B05: tone diagnostic (no metadata yaml)
+        #                       B06: unable to open file Tone/Tone.stimVls.mat
+        #                       B07: unable to open file Tone150/Tone150.stimVls.mat
+        #                       B08: FileNotFoundError TIMIT/timit998.txt
+        #                       B09: stimulus type 'nan' not found
+        #                       B10: ValueError: Unknown stimulus type '{stim_name}' for mark tokenizer
+        # legacy test block: R56_B10: metadata yaml not found in data_path
+        block_folder = 'R56_B10'
         use_htk = False
         # --------------------------------------------------------------
         self.__build_nwb_content(block_folder, use_htk)
