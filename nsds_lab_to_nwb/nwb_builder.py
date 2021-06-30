@@ -52,6 +52,7 @@ class NWBBuilder:
             block_metadata_path: str,
             metadata_lib_path: str = None,
             stim_lib_path: str = None,
+            metadata_save_path: str = None,
             use_htk=False
     ):
         self.data_path = get_data_path(data_path)
@@ -61,13 +62,12 @@ class NWBBuilder:
         self.block_folder = block_folder
         self.save_path = save_path
         self.block_metadata_path = block_metadata_path
-        self.metadata_lib_path = metadata_lib_path
         self.stim_lib_path = stim_lib_path
+        self.metadata_save_path = metadata_save_path
         self.use_htk = use_htk
 
         logger.info('Collecting metadata for NWB conversion...')
-        self.metadata = self._collect_nwb_metadata(block_metadata_path,
-                                                   metadata_lib_path, stim_lib_path)
+        self.metadata = self._collect_nwb_metadata()
         self.experiment_type = self.metadata['experiment_type']
 
         logger.info('Collecting relevant input data paths...')
@@ -86,13 +86,14 @@ class NWBBuilder:
         logger.info('Extracting session start time...')
         self.session_start_time = self._extract_session_start_time()
 
-    def _collect_nwb_metadata(self, block_metadata_path, metadata_lib_path, stim_lib_path):
+    def _collect_nwb_metadata(self):
         # collect metadata for NWB conversion
         self.metadata_manager = MetadataManager(
             block_folder=self.block_folder,
-            block_metadata_path=block_metadata_path,
-            metadata_lib_path=metadata_lib_path,
-            stim_lib_path=stim_lib_path)
+            block_metadata_path=self.block_metadata_path,
+            metadata_lib_path=self.metadata_lib_path,
+            stim_lib_path=self.stim_lib_path,
+            metadata_save_path=self.metadata_save_path)
         return self.metadata_manager.extract_metadata()
 
     def _collect_dataset_paths(self):
