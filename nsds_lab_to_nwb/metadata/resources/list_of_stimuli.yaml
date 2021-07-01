@@ -60,11 +60,3 @@ baseline:
     audio_path: ''
     marker_path: ''
     parameter_path: ''
-
-# probably unnecessary
-nan:
-    alt_names: []
-    description: 'Stimulus is not specified. To be distinguised from a stimulus-free (baseline) block.'
-    audio_path: ''
-    marker_path: ''
-    parameter_path: ''
