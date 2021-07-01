@@ -10,46 +10,37 @@ from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
 class StimValueExtractor():
     def __init__(self, stim_configs, stim_lib_path):
         self.stim_name, self.stim_info = check_stimulus_name(stim_configs['name'])
+        self.stim_type = stim_configs['type']
         self.stim_values_command = stim_configs.get('stim_values', None)
         self.stim_lib_path = stim_lib_path
 
     def extract(self):
-        if self.stim_values_command is None:
-            if self.stim_name in ('tone', 'tone150'):
-                stim_values_path = self._get_stim_values_path()
-                stim_values = tone_stimulus_values(stim_values_path)
-                return stim_values
-            elif self.stim_name in ('timit'):
-                stim_values_path = self._get_stim_values_path()
-                stim_values = timit_stimulus_values(stim_values_path)
-                return stim_values
-            else:
-                # TODO: catch other stimulus types as well
-                # return None
-                raise ValueError('missing input for stim_values')
+        if self.stim_type == 'continuous':
+            # this feature is only for discrete stimuli; skip
+            return None
 
-        stim_values_command = self.stim_values_command
-        if 'tone_stimulus_values' in stim_values_command:
-            extractor, filename = self.__parse_command(stim_values_command)
-            if extractor != 'tone_stimulus_values':
-                raise ValueError('parsing error')
-            stim_values_path = self._get_stim_values_path(filename)
+        # for synthetic stimuli
+        if self.stim_values_command is not None:
+            stim_values_command = self.stim_values_command
+            if 'gen_tone_stim_vals' in stim_values_command:
+                # for test_tone_stim
+                stim_values = gen_tone_stim_vals()
+            if 'np.ones' in stim_values_command:
+                # for white noises
+                stim_values = eval(stim_values_command)
+            return stim_values
+
+        # for tone and timit stimuli
+        if 'tone' in self.stim_name:
+            stim_values_path = self._get_stim_values_path()
             stim_values = tone_stimulus_values(stim_values_path)
-        if 'timit_stimulus_values' in stim_values_command:
-            extractor, filename = self.__parse_command(stim_values_command)
-            if extractor != 'timit_stimulus_values':
-                raise ValueError('parsing error')
-            stim_values_path = self._get_stim_values_path(filename)
+            return stim_values
+        if 'timit' in self.stim_name:
+            stim_values_path = self._get_stim_values_path()
             stim_values = timit_stimulus_values(stim_values_path)
-        if 'gen_tone_stim_vals' in stim_values_command:
-            extractor, _ = self.__parse_command(stim_values_command)
-            if extractor != 'gen_tone_stim_vals':
-                raise ValueError('parsing error')
-            stim_values = gen_tone_stim_vals()
-        if 'np.ones' in stim_values_command:
-            stim_values = eval(stim_values_command)
+            return stim_values
 
-        return stim_values
+        raise ValueError('Unknown input for stimulus parameterization')
 
     def _get_stim_values_path(self, path_from_metadata=None):
         # prioritize path from list_of_stimuli.yaml in this package
@@ -59,11 +50,6 @@ class StimValueExtractor():
 
         # if empty path in list_of_stimuli.yaml, use metadata input
         return os.path.join(self.stim_lib_path, path_from_metadata)
-
-    def __parse_command(self, command):
-        ''' return (a_a_a, b.b.b) by parsing string 'a_a_a(b.b.b)' '''
-        res = re.match('(\S+)\((\S+)\)', command)
-        return (res.group(1), res.group(2))
 
 
 def tone_stimulus_values(mat_file_path):
@@ -122,7 +108,10 @@ def timit_stimulus_values(file_path):
 
 
 def gen_tone_stim_vals():
-    ''' exact copy from mars.configs.block_directory '''
+    ''' exact copy from mars.configs.block_directory
+
+    Note: this is only used for test_tone_stim.yaml (see metadata repo)
+    '''
     frqs = np.array([500, 577, 666, 769, 887, 1024, 1182,
         1364, 1575, 1818, 2098, 2421, 2795, 3226, 3723,
         4297, 4960, 5725, 6608, 7627, 8803, 10160, 11727,
