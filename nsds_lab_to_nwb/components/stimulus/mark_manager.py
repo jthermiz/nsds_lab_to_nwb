@@ -8,7 +8,7 @@ class MarkManager():
     def __init__(self, dataset):
         self.dataset = dataset
 
-    def get_mark_track(self, name='recorded_mark'):
+    def get_mark_track(self, starting_time, name='recorded_mark'):
         # Read the mark track
         if hasattr(self.dataset, 'htk_mark_path'):
             mark_file = HTKFile(self.dataset.htk_mark_path)
@@ -22,7 +22,7 @@ class MarkManager():
         mark_time_series = TimeSeries(name=name,
                                       data=mark_track,
                                       unit='Volts',
-                                      starting_time=0.0,
+                                      starting_time=starting_time,
                                       rate=rate,
                                       description='The stimulus mark track.')
         return mark_time_series

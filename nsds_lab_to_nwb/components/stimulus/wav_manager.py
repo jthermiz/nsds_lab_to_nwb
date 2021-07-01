@@ -15,19 +15,14 @@ class WavManager():
         self.stim_configs = stim_configs
         self._load_stim_values()
 
-    def get_stim_wav(self, first_mark, name='recorded_mark'):
+    def get_stim_wav(self, starting_time, name='raw_stimulus'):
         if self.stim_name == 'wn1':
             return None
         return self._get_stim_wav(self.get_stim_file(self.stim_name, self.stim_lib_path),
-                                  first_mark)
+                                  starting_time, name=name)
 
-    def _get_stim_wav(self, stim_file, first_recorded_mark, name='raw_stimulus'):
+    def _get_stim_wav(self, stim_file, starting_time, name='raw_stimulus'):
         ''' get the raw wav stimulus track '''
-        # find starting time
-        starting_time = (first_recorded_mark
-                            - self.stim_configs['mark_offset']  # adjust for mark offset
-                            - self.stim_configs['first_mark'])  # time between stimulus DVD start and the first mark
-
         # Read the stimulus wav file
         stim_wav_fs, stim_wav = wavfile.read(stim_file)
 

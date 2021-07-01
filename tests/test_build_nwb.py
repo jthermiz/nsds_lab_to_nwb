@@ -20,14 +20,14 @@ class TestCase_Build_NWB(unittest.TestCase):
     #     - B06: Tone                                <<<<<<< now passes with resample_data=False
     #     - B07: Tone150                             <<<<<<< now passes with resample_data=False
     #     - B08: TIMIT                               <<<<<<< now passes with resample_data=False
-    #     - B09: stimulus 'nan'                      <<<<<<< now passes (stops gracefully)
-    #     - B10: ValueError: Unknown stimulus type '{stim_name}' for mark tokenizer
+    #     - B09: stimulus 'nan'                      <<<<<<< now passes (handled by Stopping gracefully)
+    #     - B10: dmr                                 <<<<<<< now passes (handled by not tokenizing)
     # legacy test block: R56_B10: metadata yaml not found in data_path
     # --------------------------------------------------------------
 
     def test_build_nwb_single_block(self):
         ''' build NWB but do not write file to disk '''
-        block_folder = 'RVG16_B09'
+        block_folder = 'RVG16_B10'
         resample_data = False   # for testing
         use_htk = False
         self.__build_nwb_content(block_folder, resample_data, use_htk)
