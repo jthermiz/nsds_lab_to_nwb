@@ -2,6 +2,8 @@ import io
 import json
 import yaml
 import csv
+import h5py
+import scipy.io
 from collections import OrderedDict
 
 
@@ -42,3 +44,16 @@ def csv_to_dict(csv_file):
     if ('key', 'value') in mydict.items():
         mydict.pop('key')
     return mydict
+
+
+# --- other file types ---
+
+def read_mat_file(file_path):
+    try:
+        f = h5py.File(file_path, 'r')
+    except OSError:
+        # if we get 'OSError: Unable to open file (File signature not found)'
+        # this mat file may be from an earlier MATLAB version
+        # and is not in HDF5 format.
+        f = scipy.io.loadmat(file_path)
+    return f

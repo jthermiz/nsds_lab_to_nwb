@@ -8,6 +8,11 @@ class MarkTokenizer():
         self.block_name = block_name
         self.stim_configs = stim_configs
 
+        self.tokenizable = True
+        if self.stim_configs['type'] == 'continuous':
+            self.tokenizable = False
+            return
+
         stim_name = self.stim_configs['name']
         if 'tone' in stim_name:
             self.tokenizer = ToneTokenizer(self.block_name, self.stim_configs)
@@ -16,7 +21,9 @@ class MarkTokenizer():
         elif 'wn' in stim_name:
             self.tokenizer = WNTokenizer(self.block_name, self.stim_configs)
         else:
-            raise ValueError("Unknown stimulus type '{stim_name}' for mark tokenizer")
+            raise ValueError(f"Unknown stimulus type '{stim_name}' for mark tokenizer")
 
     def tokenize(self, nwb_content):
+        if not self.tokenizable:
+            return
         self.tokenizer.tokenize(nwb_content)

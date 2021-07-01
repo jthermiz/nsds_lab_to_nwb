@@ -2,6 +2,7 @@ import logging.config
 import sys
 import os
 import uuid
+import warnings
 
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.file import Subject
@@ -40,6 +41,11 @@ class NWBBuilder:
         Path to metadata library repo.
     stim_lib_path : str
         Path to stimulus library.
+    metadata_save_path : str
+        Path to (optionally) save metadata input as yaml files.
+    resample_data : bool
+        Resample neural data to the nearest kHz.
+        Passed to resample_flag kwarg in NeuralDataOriginator.
     use_htk : bool
         Use data from HTK files.
     """
@@ -52,6 +58,8 @@ class NWBBuilder:
             block_metadata_path: str,
             metadata_lib_path: str = None,
             stim_lib_path: str = None,
+            metadata_save_path: str = None,
+            resample_data=True,
             use_htk=False
     ):
         self.data_path = get_data_path(data_path)
@@ -61,14 +69,22 @@ class NWBBuilder:
         self.block_folder = block_folder
         self.save_path = save_path
         self.block_metadata_path = block_metadata_path
-        self.metadata_lib_path = metadata_lib_path
         self.stim_lib_path = stim_lib_path
+        self.metadata_save_path = metadata_save_path
+        self.resample_data = resample_data
         self.use_htk = use_htk
 
+        self.bad_block = None
+
         logger.info('Collecting metadata for NWB conversion...')
-        self.metadata = self._collect_nwb_metadata(block_metadata_path,
-                                                   metadata_lib_path, stim_lib_path)
+        self.metadata = self._collect_nwb_metadata()
         self.experiment_type = self.metadata['experiment_type']
+        if self.metadata['stimulus']['name'] is None:
+            msg = (f'Unspecified stimulus for block {self.block_folder}. ' +
+                   'Stopping NWB conversion for this block.')
+            logger.warn(msg)
+            self.bad_block = True
+            return
 
         logger.info('Collecting relevant input data paths...')
         self.dataset = self._collect_dataset_paths()
@@ -80,19 +96,21 @@ class NWBBuilder:
 
         logger.info('Creating originator instances...')
         self.electrodes_originator = ElectrodesOriginator(self.metadata)
-        self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata)
+        self.neural_data_originator = NeuralDataOriginator(self.dataset, self.metadata,
+                                                           resample_flag=self.resample_data)
         self.stimulus_originator = StimulusOriginator(self.dataset, self.metadata)
 
         logger.info('Extracting session start time...')
         self.session_start_time = self._extract_session_start_time()
 
-    def _collect_nwb_metadata(self, block_metadata_path, metadata_lib_path, stim_lib_path):
+    def _collect_nwb_metadata(self):
         # collect metadata for NWB conversion
         self.metadata_manager = MetadataManager(
             block_folder=self.block_folder,
-            block_metadata_path=block_metadata_path,
-            metadata_lib_path=metadata_lib_path,
-            stim_lib_path=stim_lib_path)
+            block_metadata_path=self.block_metadata_path,
+            metadata_lib_path=self.metadata_lib_path,
+            stim_lib_path=self.stim_lib_path,
+            metadata_save_path=self.metadata_save_path)
         return self.metadata_manager.extract_metadata()
 
     def _collect_dataset_paths(self):
@@ -130,6 +148,10 @@ class NWBBuilder:
         --------
         nwb_content: an NWBFile object.
         '''
+        if self.bad_block:
+            logger.info('Looks like a bad block. Not building.')
+            return
+
         logger.info('Building components for NWB')
         current_time = get_current_time()
 
@@ -174,6 +196,9 @@ class NWBBuilder:
     def write(self, content):
         '''Write collected NWB content into an actual file.
         '''
+        if self.bad_block:
+            logger.info('Looks like a bad block. Nothing to write.')
+            return
 
         logger.info('Writing down content to ' + self.output_file)
         with NWBHDF5IO(path=self.output_file, mode='w') as nwb_fileIO:

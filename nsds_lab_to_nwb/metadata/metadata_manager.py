@@ -81,6 +81,15 @@ class MetadataReader:
             if 'g' not in weight:
                 subject_metadata['weight'] = f'{weight}g'
 
+        null_stim_name = None  # distinguish from intended stimulus-less session ("baseline")
+        if 'stimulus' not in self.metadata_input:
+            self.metadata_input['stimulus'] = {'name': null_stim_name}
+        if 'name' not in self.metadata_input['stimulus']:
+            self.metadata_input['stimulus']['name'] = null_stim_name
+        stim_name = self.metadata_input['stimulus']['name']
+        if not isinstance(stim_name, str) or stim_name in ('nan', '.nan'):
+            self.metadata_input['stimulus']['name'] = null_stim_name
+
         if 'session_description' not in self.metadata_input:
             try:
                 self.metadata_input['session_description'] = self.metadata_input['stimulus']['name']
@@ -348,10 +357,17 @@ class MetadataManager:
                 metadata['subject'][key] = 'Unknown'
 
     def __load_stimulus_info(self, stimulus_metadata):
+        if stimulus_metadata['name'] is None:
+            # indicates that stimulus is not specified for this block
+            # NWBBuilder will decide what to do in this case
+            logger.info('Unspecified stimulus in metadata.')
+            return
+
         stim_name, _ = check_stimulus_name(stimulus_metadata['name'])
         if stim_name != stimulus_metadata['name']:
             stimulus_metadata['alt_name'] = stimulus_metadata['name']
         stim_yaml_path = os.path.join(self.yaml_lib_path, 'stimulus', stim_name + '.yaml')
+        logger.debug(f'Trying to read stimulus metadata from {stim_yaml_path}...')
         stimulus_metadata.update(read_yaml(stim_yaml_path))
 
     def __load_probes(self, device_metadata):
