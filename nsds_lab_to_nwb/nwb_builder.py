@@ -2,6 +2,7 @@ import logging.config
 import sys
 import os
 import uuid
+import warnings
 
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.file import Subject
@@ -73,9 +74,17 @@ class NWBBuilder:
         self.resample_data = resample_data
         self.use_htk = use_htk
 
+        self.bad_block = None
+
         logger.info('Collecting metadata for NWB conversion...')
         self.metadata = self._collect_nwb_metadata()
         self.experiment_type = self.metadata['experiment_type']
+        if self.metadata['stimulus']['name'] is None:
+            msg = (f'Unspecified stimulus for block {self.block_folder}. ' +
+                   'Stopping NWB conversion for this block.')
+            logger.warn(msg)
+            self.bad_block = True
+            return
 
         logger.info('Collecting relevant input data paths...')
         self.dataset = self._collect_dataset_paths()
@@ -139,6 +148,10 @@ class NWBBuilder:
         --------
         nwb_content: an NWBFile object.
         '''
+        if self.bad_block:
+            logger.info('Looks like a bad block. Not building.')
+            return
+
         logger.info('Building components for NWB')
         current_time = get_current_time()
 
@@ -183,6 +196,9 @@ class NWBBuilder:
     def write(self, content):
         '''Write collected NWB content into an actual file.
         '''
+        if self.bad_block:
+            logger.info('Looks like a bad block. Nothing to write.')
+            return
 
         logger.info('Writing down content to ' + self.output_file)
         with NWBHDF5IO(path=self.output_file, mode='w') as nwb_fileIO:
