@@ -36,6 +36,11 @@ class TestCase_StimValueExtractor(unittest.TestCase):
         stim_name = 'timit'
         stim_values = self.__test_stim(stim_name)
 
+    def test_dmr_stimuli(self):
+        stim_name = 'dmr'
+        stim_values = self.__test_stim(stim_name)
+        assert stim_values is None
+
 
 if __name__ == '__main__':
     unittest.main()
