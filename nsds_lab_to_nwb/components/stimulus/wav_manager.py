@@ -29,11 +29,11 @@ class WavManager():
         # Create the stimulus timeseries
         rate = float(stim_wav_fs)
         stim_time_series = TimeSeries(name=name,
-                            data=stim_wav,
-                            starting_time=starting_time,
-                            unit='Volts',
-                            rate=rate,
-                            description='The neural recording aligned stimulus track.')
+                                      data=stim_wav,
+                                      starting_time=starting_time,
+                                      unit='Volts',
+                                      rate=rate,
+                                      description='The neural recording aligned stimulus track.')
         return stim_time_series
 
     @staticmethod

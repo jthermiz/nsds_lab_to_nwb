@@ -6,7 +6,7 @@ from nsds_lab_to_nwb.components.stimulus.tokenizers.stimulus_tokenizer import St
 class TIMITTokenizer(StimulusTokenizer):
     """
     Tokenize TIMIT stimulus data
-    
+
     Original version author: Max Dougherty <maxdougherty@lbl.gov>
     As part of MARS
     """
@@ -34,7 +34,7 @@ class TIMITTokenizer(StimulusTokenizer):
 
         # TODO: Assert that the # of stim vals is equal to the number of found onsets
         assert len(stim_onsets)==len(stim_vals), (
-                    "Incorrect number of stimulus onsets found." 
+                    "Incorrect number of stimulus onsets found."
                     + " Expected {:d}, found {:d}.".format(stim_vals.shape[1],len(stim_onsets))
                     + " Perhaps you are not using the correct tokenizer?"
                     )
@@ -48,9 +48,9 @@ class TIMITTokenizer(StimulusTokenizer):
         nwb_content.add_trial(start_time=stim_onsets[-1]+bl_end, stop_time=rec_end_time, sb='b', sample_filename=stim_vals[-1])
 
     def __already_tokenized(self, nwb_content):
-        return (nwb_content.trials and 
-                'sb' in nwb_content.trials.colnames and 
-                'frq' in nwb_content.trials.colnames and 
+        return (nwb_content.trials and
+                'sb' in nwb_content.trials.colnames and
+                'frq' in nwb_content.trials.colnames and
                 'amp' in nwb_content.trials.colnames)
 
     def __get_stim_onsets(self, nwb_content, mark_name):

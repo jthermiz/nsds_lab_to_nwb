@@ -6,7 +6,7 @@ from nsds_lab_to_nwb.components.stimulus.tokenizers.stimulus_tokenizer import St
 class ToneTokenizer(StimulusTokenizer):
     """
     Tokenize tone pip stimulus data
-    
+
     Original version author: Max Dougherty <maxdougherty@lbl.gov>
     As part of MARS
     """
@@ -16,7 +16,7 @@ class ToneTokenizer(StimulusTokenizer):
     def tokenize(self, nwb_content, mark_name='recorded_mark'):
         """
         """
-        
+
         if self.__already_tokenized(nwb_content):
             print('Block has already been tokenized')
             return
@@ -33,14 +33,14 @@ class ToneTokenizer(StimulusTokenizer):
 
         # Add the pre-stimulus period to baseline
         nwb_content.add_trial(start_time=0.0,
-                                stop_time=stim_onsets[0]-stim_dur, 
+                                stop_time=stim_onsets[0]-stim_dur,
                                 sb='b',
                                 frq=str(float(stim_vals[1,0])),
                                 amp=str(float(stim_vals[0,0])))
 
         # TODO: Assert that the # of stim vals is equal to the number of found onsets
         assert len(stim_onsets)==stim_vals.shape[1], (
-                    "Incorrect number of stimulus onsets found." 
+                    "Incorrect number of stimulus onsets found."
                     + " Expected {:d}, found {:d}.".format(stim_vals.shape[1],len(stim_onsets))
                     + " Perhaps you are not using the correct tokenizer?"
                     )
@@ -60,9 +60,9 @@ class ToneTokenizer(StimulusTokenizer):
                                 sb='b', frq=frq, amp=amp)
 
     def __already_tokenized(self, nwb_content):
-        return (nwb_content.trials and 
-                'sb' in nwb_content.trials.colnames and 
-                'frq' in nwb_content.trials.colnames and 
+        return (nwb_content.trials and
+                'sb' in nwb_content.trials.colnames and
+                'frq' in nwb_content.trials.colnames and
                 'amp' in nwb_content.trials.colnames)
 
     def __get_stim_onsets(self, nwb_content, mark_name):

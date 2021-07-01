@@ -1,7 +1,5 @@
-import re
 import os
 import numpy as np
-import csv
 
 from nsds_lab_to_nwb.common.io import read_mat_file
 from nsds_lab_to_nwb.metadata.stim_name_helper import check_stimulus_name
@@ -80,7 +78,7 @@ def tone_stimulus_values(mat_file_path):
     # this offset value comes from mars; what is this?
     # variable naming (amp_offset) was by JHB and could be wrong
     amp_offset = 8
-    stim_vals[0,:] = stim_vals[0,:] + amp_offset
+    stim_vals[0, :] = stim_vals[0, :] + amp_offset
 
     return stim_vals
 
@@ -113,14 +111,16 @@ def gen_tone_stim_vals():
     Note: this is only used for test_tone_stim.yaml (see metadata repo)
     '''
     frqs = np.array([500, 577, 666, 769, 887, 1024, 1182,
-        1364, 1575, 1818, 2098, 2421, 2795, 3226, 3723,
-        4297, 4960, 5725, 6608, 7627, 8803, 10160, 11727,
-        13535, 15622, 18031, 20812, 24021, 27725, 32000])
-    amps = np.arange(1,9)
-    frqset, ampset = np.meshgrid(frqs,amps)
+                     1364, 1575, 1818, 2098, 2421, 2795, 3226, 3723,
+                     4297, 4960, 5725, 6608, 7627, 8803, 10160, 11727,
+                     13535, 15622, 18031, 20812, 24021, 27725, 32000])
+    amps = np.arange(1, 9)
+    frqset, ampset = np.meshgrid(frqs, amps)
     frq_amp_pairs = np.array([ampset.flatten(), frqset.flatten()]).T
-    np.random.seed(seed=1234) #Insure that the same order is produced with each call.
+    np.random.seed(seed=1234) # ensure that the same order is produced with each call.
     shuffle_inds1 = np.random.permutation(np.arange(frq_amp_pairs.shape[0]))
     shuffle_inds2 = np.random.permutation(np.arange(frq_amp_pairs.shape[0]))
-    stim_vals = np.concatenate((frq_amp_pairs[shuffle_inds1,:],frq_amp_pairs[shuffle_inds2,:]),axis=0)
+    stim_vals = np.concatenate((frq_amp_pairs[shuffle_inds1, :],
+                                frq_amp_pairs[shuffle_inds2, :]),
+                               axis=0)
     return stim_vals.T
