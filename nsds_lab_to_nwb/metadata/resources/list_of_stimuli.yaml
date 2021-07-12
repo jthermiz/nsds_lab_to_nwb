@@ -49,10 +49,10 @@ dmr:
 
 tone_diagnostic:
     alt_names: ['Tone diagnostic']
-    description: '' #Vanessa can you please add a description, copy files to catscan and add paths (if the files exist)
-    audio_path: ''
-    marker_path: ''
-    parameter_path: ''
+    description: ''
+    audio_path: 'ToneDiagnostic/tonediagnostic_s.wav'
+    marker_path: 'ToneDiagnostic/tonediagnostic_t.wav'
+    parameter_path: 'ToneDiagnostic/Tone_diag_stim.stimVls.mat'
 
 baseline:
     alt_names: ['Baseline']

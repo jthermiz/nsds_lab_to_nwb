@@ -13,22 +13,11 @@ class TestCase_Build_NWB(unittest.TestCase):
     metadata_save_path = '_test/'
     out_path = '_test/'
 
-    # --------------------------------------------------------------
-    # currently failing blocks:
-    # new test blocks: RVG16_{B02, B04, B05, B06, B07, B08, B09, B10}
-    #     - B02, B04, B05: tone_diagnostic (no associated files in list_of_stimuli.yaml)
-    #     - B06: Tone                                <<<<<<< now passes with resample_data=False
-    #     - B07: Tone150                             <<<<<<< now passes with resample_data=False
-    #     - B08: TIMIT                               <<<<<<< now passes with resample_data=False
-    #     - B09: stimulus 'nan'                      <<<<<<< now passes (handled by Stopping gracefully)
-    #     - B10: dmr                                 <<<<<<< now passes (handled by not tokenizing)
-    # legacy test block: R56_B10: metadata yaml not found in data_path
-    # --------------------------------------------------------------
-
     def test_build_nwb_single_block(self):
         ''' build NWB but do not write file to disk '''
-        block_folder = 'RVG16_B10'
+        block_folder = 'RVG16_B08'
         resample_data = False   # for testing
+        # resample_data = True
         use_htk = False
         self.__build_nwb_content(block_folder, resample_data, use_htk)
 
