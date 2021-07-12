@@ -47,7 +47,10 @@ class StimValueExtractor():
             return os.path.join(self.stim_lib_path, path_from_los)
 
         # if empty path in list_of_stimuli.yaml, use metadata input
-        return os.path.join(self.stim_lib_path, path_from_metadata)
+        if path_from_metadata is not None:
+            return os.path.join(self.stim_lib_path, path_from_metadata)
+
+        return ValueError('No input for the path to stim parameterization info')
 
 
 def tone_stimulus_values(mat_file_path):
