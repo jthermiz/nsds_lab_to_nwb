@@ -35,7 +35,7 @@ class TIMITTokenizer(StimulusTokenizer):
         # TODO: Assert that the # of stim vals is equal to the number of found onsets
         assert len(stim_onsets)==len(stim_vals), (
                     "Incorrect number of stimulus onsets found."
-                    + " Expected {:d}, found {:d}.".format(stim_vals.shape[1],len(stim_onsets))
+                    + " Expected {:d}, found {:d}.".format(len(stim_vals), len(stim_onsets))
                     + " Perhaps you are not using the correct tokenizer?"
                     )
         for i, onset in enumerate(stim_onsets):
@@ -54,7 +54,7 @@ class TIMITTokenizer(StimulusTokenizer):
                 'amp' in nwb_content.trials.colnames)
 
     def __get_stim_onsets(self, nwb_content, mark_name):
-        mark_dset = self.read_mark(mark_name)
+        mark_dset = self.read_mark(nwb_content, mark_name)
         mark_fs = mark_dset.rate
         mark_offset = self.stim_configs['mark_offset']
         stim_dur = self.stim_configs['duration']
